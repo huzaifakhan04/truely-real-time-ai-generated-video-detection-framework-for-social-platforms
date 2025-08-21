@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Video Detection Result</title>
+    <style>
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+        }
+
+        .video-container {
+            margin: 20px 0;
+        }
+
+        video {
+            width: 100%;
+        }
+
+        .score {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .fake {
+            color: #db4437;
+        }
+
+        p {
+            line-height: 1.6;
+            color: #555;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI-Generated Video Detection Result</h1>
+        <div class="score fake">{{ fake_score }}% AI-Generated</div>
+        <p>
+            This video shows signs of AI manipulation. Red bounding boxes highlight frames where 
+            facial inconsistencies were detected between consecutive frames, which is a common 
+            indicator of deepfake or AI-generated content.
+        </p>
+        <div class="video-container">
+            <video controls>
+                <source src="{{ video_url }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <p>
+            <strong>How the detection works:</strong><br>
+            The system analyzes facial consistency between frames. Sudden changes in facial features 
+            that exceed natural movement thresholds are flagged as suspicious (red boxes). Multiple 
+            suspicious frames contribute to the overall AI-generated confidence score.
+        </p>
+    </div>
+</body>
+</html>

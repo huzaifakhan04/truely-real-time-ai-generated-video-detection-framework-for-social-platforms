@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="popup.css">
+  <title>AI Video Detector</title>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>AI Video Detector</h1>
+    </header>
+    <div id="not-youtube" class="hidden message error">
+      <p>This extension only works on YouTube videos.</p>
+      <p>Please navigate to a YouTube video and try again.</p>
+    </div>
+    <div id="youtube-content" class="hidden">
+      <div id="initial-state">
+        <p>Click the button below to analyze this YouTube video for AI-generated content.</p>
+        <button id="analyze-btn" class="primary-btn">Analyze Video</button>
+      </div>
+      <div id="loading-state" class="hidden">
+        <div class="progress">
+          <div id="progress-step">Downloading video...</div>
+          <div class="progress-bar">
+            <div id="progress-indicator"></div>
+          </div>
+        </div>
+      </div>
+      <div id="result-state" class="hidden">
+        <div id="real-result" class="result-box success hidden">
+          <h2>Real Video Detected</h2>
+          <div id="real-score" class="score">100% Real</div>
+          <p>This video appears to be authentic with no signs of AI manipulation.</p>
+        </div>
+        <div id="fake-result" class="result-box error hidden">
+          <h2>AI-Generated Content Detected</h2>
+          <div id="fake-score" class="score">95% AI-Generated</div>
+          <p id="fake-explanation">This video shows signs of facial inconsistency between frames, which is a common indicator of AI-generated or deepfake content.</p>
+          <a id="detailed-view-link" href="#" target="_blank" class="secondary-btn">View Detailed Analysis</a>
+        </div>
+        <button id="analyze-again-btn" class="primary-btn">Analyze Again</button>
+      </div>
+    </div>
+    <footer>
+      <p>AI-Generated Video Detection Tool</p>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

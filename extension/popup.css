@@ -1,0 +1,144 @@
+:root {
+  --primary-color: #4285f4;
+  --success-color: #0f9d58;
+  --error-color: #db4437;
+  --background-color: #ffffff;
+  --text-color: #202124;
+  --border-color: #dadce0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Roboto", Arial, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+.container {
+  width: 350px;
+  padding: 16px;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+h1 {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.message {
+  padding: 12px;
+  border-radius: 8px;
+  margin: 12px 0;
+}
+
+.error {
+  background-color: rgba(219, 68, 55, 0.1);
+  border: 1px solid var(--error-color);
+}
+
+.success {
+  background-color: rgba(15, 157, 88, 0.1);
+  border: 1px solid var(--success-color);
+}
+
+p {
+  margin: 8px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.primary-btn {
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+  margin: 12px 0;
+  transition: background-color 0.3s;
+}
+
+.primary-btn:hover {
+  background-color: #3367d6;
+}
+
+.secondary-btn {
+  display: inline-block;
+  background-color: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-size: 14px;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: background-color 0.3s;
+}
+
+.secondary-btn:hover {
+  background-color: rgba(66, 133, 244, 0.1);
+}
+
+.progress {
+  margin: 20px 0;
+}
+
+#progress-step {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  background-color: #f1f3f4;
+  border-radius: 4px;
+  height: 8px;
+  overflow: hidden;
+}
+
+#progress-indicator {
+  height: 100%;
+  width: 0;
+  background-color: var(--primary-color);
+  transition: width 0.3s;
+}
+
+.result-box {
+  text-align: center;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 16px 0;
+}
+
+.score {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 12px 0;
+}
+
+footer {
+  text-align: center;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color);
+  font-size: 12px;
+  color: #5f6368;
+}

@@ -62,6 +62,44 @@ This application uses computer vision and facial recognition to identify inconsi
    - Red boxes highlight inconsistent facial features (possibly AI-generated).
    - Check the confidence score for overall assessment.
 
+## Chrome Extension
+
+The project includes a Chrome extension for quick video analysis directly from your browser.
+
+### Installing the Extension
+
+1. Open Chrome and navigate to `chrome://extensions/`.
+2. Enable "Developer mode" using the toggle in the top-right corner.
+3. Click "Load unpacked" and select the `extension` folder from this project.
+4. The extension icon should appear in your browser toolbar.
+
+### Running the Extension Server
+
+The extension requires a local server to process videos:
+
+1. Navigate to the extension server directory:
+   ```bash
+   cd extension/server
+   ```
+
+2. Install server-specific dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Start the server:
+   ```bash
+   python server.py
+   ```
+
+### Using the Extension
+
+1. Click the extension icon in your browser toolbar.
+2. Select a video to analyze or provide a YouTube URL.
+3. Click "Analyze Video".
+4. View the analysis results directly in the extension popup.
+5. For detailed analysis, you can view the full report in a new tab.
+
 ## Technical Implementation
 
 The detection system uses:
