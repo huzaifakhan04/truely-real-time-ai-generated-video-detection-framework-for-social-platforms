@@ -300,8 +300,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Function to initialize donut charts
   function initDonutCharts() {
-    // Set up SVG parameters
-    const circumference = 2 * Math.PI * 15.91549430918954;
+    // Set up SVG parameters with the radius matching our CSS
+    const radius = 14;
+    const circumference = 2 * Math.PI * radius;
     
     // Initialize both charts at 0%
     realProgress.style.strokeDasharray = `${circumference} ${circumference}`;
@@ -313,7 +314,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Function to update donut chart with percentage
   function updateDonutChart(circleElement, percentage) {
-    const circumference = 2 * Math.PI * 15.91549430918954;
+    // Use a smaller radius to match our updated CSS
+    const radius = 14;
+    const circumference = 2 * Math.PI * radius;
     const offset = circumference - (percentage / 100) * circumference;
     
     // Animate the chart fill

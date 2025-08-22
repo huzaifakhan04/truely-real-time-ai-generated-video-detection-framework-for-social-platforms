@@ -3,28 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI-Generated Video Detection - Detailed Analysis</title>
+    <title>TruthLens - AI Video Detection Report</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-color: #5469d4;
-            --primary-light: #eaecf9;
-            --success-color: #10b981;
-            --success-light: #ecfdf5;
-            --error-color: #ef4444;
-            --error-light: #fef2f2;
-            --warning-color: #f59e0b;
-            --warning-light: #fffbeb;
-            --text-primary: #1f2937;
-            --text-secondary: #4b5563;
-            --text-tertiary: #9ca3af;
+            /* Brand colors - more sophisticated and trustworthy palette */
+            --primary-color: #3b82f6;
+            --primary-dark: #2563eb;
+            --primary-light: #dbeafe;
+            --primary-bg: #f0f7ff;
+            
+            /* Status colors - more refined */
+            --success-color: #059669;
+            --success-light: #d1fae5;
+            --success-bg: #ecfdf5;
+            --error-color: #dc2626;
+            --error-light: #fee2e2;
+            --error-bg: #fef2f2;
+            --warning-color: #d97706;
+            --warning-light: #fef3c7;
+            --warning-bg: #fffbeb;
+            --info-color: #3b82f6;
+            --info-light: #dbeafe;
+            --info-bg: #eff6ff;
+            
+            /* Neutral colors - more tonal variety for professional layouts */
+            --text-primary: #111827;
+            --text-secondary: #374151;
+            --text-tertiary: #6b7280;
+            --text-quaternary: #9ca3af;
+            --text-inverted: #ffffff;
+            
+            /* Background colors */
             --background-color: #f9fafb;
+            --background-alt: #f3f4f6;
             --card-background: #ffffff;
+            --background-subtle: #f3f4f6;
+            
+            /* Border colors */
             --border-color: #e5e7eb;
-            --border-radius: 12px;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --border-color-light: #f3f4f6;
+            --border-color-focus: #93c5fd;
+            
+            /* Shape properties */
+            --border-radius-sm: 6px;
+            --border-radius: 8px;
+            --border-radius-md: 12px;
+            --border-radius-lg: 16px;
+            --border-radius-full: 9999px;
+            
+            /* Elevation/Shadows */
+            --shadow-xs: 0px 1px 2px rgba(16, 24, 40, 0.05);
+            --shadow-sm: 0px 1px 3px rgba(16, 24, 40, 0.1), 0px 1px 2px rgba(16, 24, 40, 0.06);
+            --shadow-md: 0px 4px 6px -1px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.1);
+            --shadow-lg: 0px 10px 15px -3px rgba(16, 24, 40, 0.1), 0px 4px 6px -4px rgba(16, 24, 40, 0.1);
+            --shadow-focus: 0px 0px 0px 4px var(--border-color-focus);
+            
+            /* Animation speeds */
+            --transition-fast: 150ms;
+            --transition-normal: 250ms;
+            --transition-slow: 350ms;
         }
         
         * {
@@ -34,20 +73,59 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--background-color);
             color: var(--text-primary);
             line-height: 1.6;
             padding: 0;
             margin: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         .header {
             background-color: var(--card-background);
             box-shadow: var(--shadow-sm);
-            padding: 1.5rem;
+            padding: 2rem 1.5rem;
             text-align: center;
             border-bottom: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+        
+        .logo img {
+            height: 40px;
+            margin-right: 12px;
+        }
+        
+        .logo-text {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--text-primary);
         }
 
         .header h1 {
@@ -70,15 +148,23 @@
 
         .card {
             background: var(--card-background);
-            border-radius: var(--border-radius);
+            border-radius: var(--border-radius-lg);
             box-shadow: var(--shadow-md);
             margin-bottom: 2rem;
             overflow: hidden;
+            transform: translateY(0);
+            transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
         }
 
         .card-header {
             padding: 1.5rem;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color-light);
+            background-color: var(--background-alt);
         }
 
         .card-header h2 {
@@ -92,6 +178,8 @@
 
         .card-header h2 i {
             margin-right: 0.75rem;
+            color: var(--primary-color);
+            font-size: 1.1em;
         }
 
         .card-body {
@@ -107,24 +195,26 @@
 
         .score-ring {
             position: relative;
-            width: 200px;
-            height: 200px;
+            width: 160px;
+            height: 160px;
+            filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.06));
         }
 
         .score-circle {
             fill: none;
-            stroke-width: 10;
+            stroke-width: 5;
+            stroke-linecap: round;
+            overflow: visible;
         }
 
         .score-circle.bg {
-            stroke: var(--error-light);
+            stroke: var(--background-subtle);
         }
 
         .score-circle.progress {
             stroke: var(--error-color);
-            stroke-linecap: round;
-            transform-origin: center;
-            transform: rotate(-90deg);
+            transition: stroke-dashoffset 1.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+            filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.1));
         }
 
         .score-text {
@@ -133,19 +223,28 @@
             left: 50%;
             transform: translate(-50%, -50%);
             text-align: center;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
 
         .score-value {
-            font-size: 3rem;
+            font-size: 2.4rem;
             font-weight: 700;
             color: var(--error-color);
             line-height: 1;
+            display: block;
         }
 
         .score-label {
-            font-size: 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 0.25rem;
             color: var(--text-secondary);
-            margin-top: 0.5rem;
+            line-height: 1;
+            display: block;
         }
 
         .grid {
@@ -158,10 +257,16 @@
             background: var(--card-background);
             border-radius: var(--border-radius);
             padding: 1.25rem;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-xs);
+            border: 1px solid var(--border-color-light);
             display: flex;
             align-items: center;
+            transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
         }
 
         .stat-icon {
@@ -203,12 +308,14 @@
         .stat-label {
             font-size: 0.875rem;
             color: var(--text-secondary);
+            font-weight: 500;
         }
 
         .stat-value {
             font-size: 1.25rem;
             font-weight: 600;
             color: var(--text-primary);
+            margin-top: 2px;
         }
 
         .video-container {
@@ -216,8 +323,9 @@
             position: relative;
             padding-top: 56.25%;
             overflow: hidden;
-            border-radius: var(--border-radius);
+            border-radius: var(--border-radius-md);
             background: #000;
+            box-shadow: var(--shadow-md);
         }
 
         .video-container video {
@@ -229,42 +337,71 @@
         }
 
         .explanation {
-            background: var(--error-light);
-            border-radius: var(--border-radius);
-            padding: 1.25rem;
-            margin: 1.5rem 0;
+            background: var(--error-bg);
+            border-radius: var(--border-radius-md);
+            padding: 1.5rem;
+            margin: 2rem 0;
             border-left: 4px solid var(--error-color);
+            position: relative;
+        }
+        
+        .explanation::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.05) 0%, rgba(220, 38, 38, 0) 70%);
+            z-index: 0;
         }
 
         .explanation h3 {
-            font-size: 1rem;
+            font-size: 1.1rem;
             font-weight: 600;
             color: var(--error-color);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .explanation p {
             color: var(--text-primary);
             font-size: 0.9375rem;
-            margin: 0.5rem 0;
+            margin: 0.75rem 0;
+            position: relative;
+            z-index: 1;
         }
 
         .features {
-            margin: 1.5rem 0;
+            margin: 1.75rem 0;
         }
 
         .feature-item {
             display: flex;
             align-items: flex-start;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
+            padding: 0.5rem;
+            border-radius: var(--border-radius);
+            transition: background-color var(--transition-normal);
+        }
+        
+        .feature-item:hover {
+            background-color: var(--background-subtle);
         }
 
         .feature-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
             flex-shrink: 0;
-            width: 24px;
+            width: 32px;
+            height: 32px;
+            border-radius: var(--border-radius-full);
+            background-color: var(--primary-light);
             color: var(--primary-color);
             margin-right: 1rem;
-            text-align: center;
         }
 
         .feature-content {
@@ -280,30 +417,114 @@
         .feature-desc {
             color: var(--text-secondary);
             font-size: 0.9375rem;
+            line-height: 1.5;
         }
 
         footer {
             text-align: center;
-            padding: 2rem 0;
+            padding: 2.5rem 0;
             background-color: var(--card-background);
-            margin-top: 2rem;
-            border-top: 1px solid var(--border-color);
+            margin-top: 3rem;
+            border-top: 1px solid var(--border-color-light);
             color: var(--text-tertiary);
             font-size: 0.875rem;
         }
 
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-logo img {
+            height: 24px;
+            margin-right: 10px;
+        }
+        
+        .footer-logo span {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+        
+        .footer-tagline {
+            color: var(--text-tertiary);
+            margin-bottom: 1rem;
+        }
+
         .footer-links {
-            margin-top: 0.75rem;
+            margin: 1rem 0;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
         }
 
         .footer-links a {
             color: var(--primary-color);
             text-decoration: none;
-            margin: 0 0.75rem;
+            font-weight: 500;
+            transition: color var(--transition-normal);
         }
 
         .footer-links a:hover {
+            color: var(--primary-dark);
             text-decoration: underline;
+        }
+        
+        .footer-meta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+            color: var(--text-quaternary);
+            font-size: 0.8125rem;
+        }
+        
+        .footer-version {
+            background-color: var(--background-subtle);
+            padding: 2px 6px;
+            border-radius: var(--border-radius-sm);
+            font-family: monospace;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.25rem;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            text-decoration: none;
+            border: none;
+            margin-top: 1.5rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--primary-light);
         }
         
         @media (max-width: 768px) {
@@ -316,20 +537,47 @@
             }
             
             .score-ring {
-                width: 150px;
-                height: 150px;
+                width: 160px;
+                height: 160px;
             }
             
             .score-value {
-                font-size: 2.5rem;
+                font-size: 2.2rem;
+            }
+            
+            .score-label {
+                font-size: 0.9rem;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .card-header h2 {
+                font-size: 1.15rem;
+            }
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
             }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>AI-Generated Video Detection Report</h1>
-        <p class="header-subtitle">Detailed Analysis Results</p>
+        <div class="header-content">
+            <div class="logo">
+                <img src="/static/icon48.png" alt="TruthLens Logo">
+                <div class="logo-text">TruthLens</div>
+            </div>
+            <h1>AI-Generated Video Detection Report</h1>
+            <p class="header-subtitle">Comprehensive Analysis Results</p>
+        </div>
     </div>
 
     <div class="container">
@@ -341,8 +589,8 @@
                 <div class="score-container">
                     <div class="score-ring">
                         <svg viewBox="0 0 100 100">
-                            <circle class="score-circle bg" cx="50" cy="50" r="45" />
-                            <circle class="score-circle progress" cx="50" cy="50" r="45" stroke-dasharray="282.74" stroke-dashoffset="{{ 282.74 * (100 - fake_score) / 100 }}" />
+                            <circle class="score-circle bg" cx="50" cy="50" r="42" />
+                            <circle class="score-circle progress" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="{{ 263.89 * (100 - fake_score) / 100 }}" />
                         </svg>
                         <div class="score-text">
                             <div class="score-value">{{ fake_score }}%</div>
@@ -415,10 +663,20 @@
                         Red bounding boxes in the video highlight frames where facial inconsistencies were detected.
                     </p>
                 </div>
+                
+                <a href="#video-section" class="btn btn-primary">
+                    <i class="fas fa-play"></i>
+                    Watch Analyzed Video
+                </a>
+                
+                <a href="#" class="btn btn-outline" onclick="window.print()">
+                    <i class="fas fa-download"></i>
+                    Download Report
+                </a>
             </div>
         </div>
 
-        <div class="card">
+        <div class="card" id="video-section">
             <div class="card-header">
                 <h2><i class="fas fa-video"></i> Analyzed Video</h2>
             </div>
@@ -433,7 +691,7 @@
                 <div class="features">
                     <div class="feature-item">
                         <div class="feature-icon">
-                            <i class="fas fa-square"></i>
+                            <i class="fas fa-square" style="color: #dc2626;"></i>
                         </div>
                         <div class="feature-content">
                             <div class="feature-title">Red Bounding Boxes</div>
@@ -443,7 +701,7 @@
                     
                     <div class="feature-item">
                         <div class="feature-icon">
-                            <i class="fas fa-square"></i>
+                            <i class="fas fa-square" style="color: #059669;"></i>
                         </div>
                         <div class="feature-content">
                             <div class="feature-title">Green Bounding Boxes</div>
@@ -502,15 +760,63 @@
                 </div>
             </div>
         </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-shield-alt"></i> Media Literacy Tips</h2>
+            </div>
+            <div class="card-body">
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">Verify Before Sharing</div>
+                            <div class="feature-desc">Always check the source and authenticity of videos before sharing them on social media.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">Look for Visual Clues</div>
+                            <div class="feature-desc">Watch for unnatural facial movements, strange lighting, or inconsistent blinking patterns.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-newspaper"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">Cross-Reference</div>
+                            <div class="feature-desc">Check if the video has been reported by credible news sources or fact-checking organizations.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <footer>
-        <p>AI-Generated Video Detection Tool</p>
+        <div class="footer-logo">
+            <img src="/static/icon16.png" alt="TruthLens Icon">
+            <span>TruthLens</span>
+        </div>
+        <p class="footer-tagline">Promoting Media Literacy in the AI Era</p>
         <div class="footer-links">
             <a href="https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool" target="_blank" rel="noopener">GitHub</a>
             <a href="https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool/blob/main/README.md" target="_blank" rel="noopener">About</a>
+            <a href="#" target="_blank" rel="noopener">Help Center</a>
+            <a href="#" target="_blank" rel="noopener">Privacy</a>
+        </div>
+        <div class="footer-meta">
+            <span>© 2025 TruthLens</span>
+            <span class="footer-version">v1.0.0</span>
         </div>
     </footer>
-
 </body>
 </html>
