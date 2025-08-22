@@ -152,12 +152,10 @@
             box-shadow: var(--shadow-md);
             margin-bottom: 2rem;
             overflow: hidden;
-            transform: translateY(0);
-            transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+            transition: box-shadow var(--transition-normal);
         }
         
         .card:hover {
-            transform: translateY(-3px);
             box-shadow: var(--shadow-lg);
         }
 
@@ -261,11 +259,10 @@
             border: 1px solid var(--border-color-light);
             display: flex;
             align-items: center;
-            transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+            transition: box-shadow var(--transition-normal);
         }
         
         .stat-card:hover {
-            transform: translateY(-2px);
             box-shadow: var(--shadow-sm);
         }
 
@@ -513,7 +510,6 @@
         }
         
         .btn-primary:hover {
-            transform: translateY(-1px);
             box-shadow: var(--shadow-md);
         }
         
@@ -556,6 +552,21 @@
             .card-header h2 {
                 font-size: 1.15rem;
             }
+        }
+        
+        /* Minimizing all animations for cleaner look */
+        .btn, .card, .stat-card, .feature-item, .footer-links a {
+            transition: box-shadow var(--transition-normal), background-color var(--transition-normal), color var(--transition-normal);
+            transform: none !important;
+        }
+        
+        /* Colors for icon boxes */
+        .icon-red {
+            color: #dc2626;
+        }
+        
+        .icon-green {
+            color: #059669;
         }
         
         @media (prefers-reduced-motion: reduce) {
@@ -691,7 +702,7 @@
                 <div class="features">
                     <div class="feature-item">
                         <div class="feature-icon">
-                            <i class="fas fa-square" style="color: #dc2626;"></i>
+                            <i class="fas fa-square icon-red"></i>
                         </div>
                         <div class="feature-content">
                             <div class="feature-title">Red Bounding Boxes</div>
@@ -701,7 +712,7 @@
                     
                     <div class="feature-item">
                         <div class="feature-icon">
-                            <i class="fas fa-square" style="color: #059669;"></i>
+                            <i class="fas fa-square icon-green"></i>
                         </div>
                         <div class="feature-content">
                             <div class="feature-title">Green Bounding Boxes</div>
