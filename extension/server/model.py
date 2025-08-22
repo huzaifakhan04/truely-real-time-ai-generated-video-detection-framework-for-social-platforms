@@ -83,7 +83,13 @@ def run(
     if frame_count == 0:
         print("Error: No frames were processed")
         return 0
-    accuracy = (deep_fake_frame_count / frame_count) * 1000
-    if accuracy > 100:
-        accuracy = 95
-    return int(accuracy)
+    total_processed_frames = sum(1 for i in range(frame_count) if i % frames_between_processing == 0)
+    if total_processed_frames == 0:
+        return 0
+    deepfake_percentage = (deep_fake_frame_count / total_processed_frames) * 100
+    confidence_factor = min(deepfake_percentage * (deepfake_count / threshold_frames_for_deepfake), 100)
+    if frame_count > fps * 30:
+        weighted_score = min(deepfake_percentage + confidence_factor * 0.5, 100)
+    else:
+        weighted_score = min(deepfake_percentage + confidence_factor * 0.3, 100)
+    return max(0, min(100, int(weighted_score)))
