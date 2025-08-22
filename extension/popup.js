@@ -1,6 +1,5 @@
 document.addEventListener("DOMContentLoaded", function() {
-  
-  // DOM element references
+
   const analyzeBtn = document.getElementById("analyze-btn");
   const analyzeAgainBtn = document.getElementById("analyze-again-btn");
   const notVideoPageDiv = document.getElementById("not-youtube");
@@ -21,22 +20,18 @@ document.addEventListener("DOMContentLoaded", function() {
   const realProgress = document.getElementById("real-progress");
   const fakeProgress = document.getElementById("fake-progress");
   const aboutLink = document.getElementById("about-link");
-  
-  // Initialize the donut chart settings
+
   initDonutCharts();
 
-  // Check if the current page is a video page
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     const currentUrl = tabs[0].url;
     let detectedPlatform = detectPlatformFromUrl(currentUrl);
-    
     chrome.tabs.sendMessage(tabs[0].id, {action: "checkVideoPage"}, function(response) {
       if (chrome.runtime.lastError) {
-        console.log('Content script error:', chrome.runtime.lastError.message);
+        console.log("Content script error:", chrome.runtime.lastError.message);
         handlePlatformDetection(detectedPlatform, currentUrl);
         return;
       }
-      
       if (response && response.platform) {
         handlePlatformDetection(response.platform, currentUrl);
       } else {
@@ -45,36 +40,28 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   });
 
-  // Handle Analyze button click
   analyzeBtn.addEventListener("click", function() {
     initialStateDiv.classList.add("hidden");
     loadingStateDiv.classList.remove("hidden");
     errorContainer.innerHTML = "";
-    
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
       const videoUrl = tabs[0].url;
       const urlDetectedPlatform = detectPlatformFromUrl(videoUrl);
-      
       chrome.tabs.sendMessage(tabs[0].id, {action: "checkVideoPage"}, function(response) {
         const platform = (response && response.platform) ? 
                           getPlatformDisplayName(response.platform) : 
                           getPlatformDisplayName(urlDetectedPlatform);
-        
         displayUrlInfo(platform, videoUrl);
-        
-        // Start the analysis process
         startAnalysis(videoUrl);
       });
     });
   });
 
-  // Handle Analyze Again button click
   analyzeAgainBtn.addEventListener("click", function() {
     resultStateDiv.classList.add("hidden");
     initialStateDiv.classList.remove("hidden");
   });
 
-  // About link click handler
   aboutLink.addEventListener("click", function(e) {
     e.preventDefault();
     chrome.tabs.create({
@@ -82,10 +69,8 @@ document.addEventListener("DOMContentLoaded", function() {
     });
   });
 
-  // Function to start the analysis process
   function startAnalysis(videoUrl) {
     updateProgress(10, "Downloading video...");
-    
     chrome.runtime.sendMessage(
       {action: "downloadVideo", videoUrl: videoUrl},
       function(response) {
@@ -93,9 +78,7 @@ document.addEventListener("DOMContentLoaded", function() {
           showError(response.error);
           return;
         }
-        
         updateProgress(40, "Processing video...");
-        
         chrome.runtime.sendMessage(
           {action: "analyzeVideo", videoPath: response.videoPath},
           function(analysisResponse) {
@@ -103,12 +86,9 @@ document.addEventListener("DOMContentLoaded", function() {
               showError(analysisResponse.error);
               return;
             }
-            
             updateProgress(70, "Analyzing facial features...");
-            
             setTimeout(() => {
               updateProgress(90, "Finalizing results...");
-              
               setTimeout(() => {
                 updateProgress(100, "Analysis complete!");
                 
@@ -123,53 +103,35 @@ document.addEventListener("DOMContentLoaded", function() {
     );
   }
 
-  // Function to display analysis results
   function displayResults(analysisResponse) {
     loadingStateDiv.classList.add("hidden");
     resultStateDiv.classList.remove("hidden");
-    
     const fakeScore = analysisResponse.fakeScore;
     const realScore = 100 - fakeScore;
-    
-    // Clone URL info to results section
     const urlInfoDiv = loadingStateDiv.querySelector(".url-info");
     if (urlInfoDiv) {
       const resultUrlInfo = urlInfoDiv.cloneNode(true);
       document.getElementById("result-url-info").innerHTML = "";
       document.getElementById("result-url-info").appendChild(resultUrlInfo);
     }
-    
-    // Update appropriate result section
     if (fakeScore > 50) {
       realResultDiv.classList.add("hidden");
       fakeResultDiv.classList.remove("hidden");
-      
-      // Update donut chart
       updateDonutChart(fakeProgress, fakeScore);
       fakeScoreElem.textContent = `${fakeScore}%`;
-      
-      // Update explanation text
       fakeExplanationP.textContent = generateExplanationText(fakeScore);
-      
-      // Update analysis details
       document.getElementById("fake-consistency").textContent = 
         fakeScore > 75 ? "Very Low" : "Low";
       document.getElementById("fake-anomalies").textContent = 
         fakeScore > 75 ? "Very High" : "High";
       document.getElementById("fake-confidence").textContent = 
         fakeScore > 90 ? "Very High" : (fakeScore > 70 ? "High" : "Medium");
-      
-      // Set detailed view link
       detailedViewLink.href = analysisResponse.detailedViewUrl;
     } else {
       fakeResultDiv.classList.add("hidden");
       realResultDiv.classList.remove("hidden");
-      
-      // Update donut chart
       updateDonutChart(realProgress, realScore);
       realScoreElem.textContent = `${realScore}%`;
-      
-      // Update analysis details
       document.getElementById("real-consistency").textContent = 
         realScore > 75 ? "Very High" : "High";
       document.getElementById("real-anomalies").textContent = 
@@ -177,23 +139,19 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // Function to update progress indicator
   function updateProgress(percent, message) {
     progressIndicator.style.width = `${percent}%`;
     progressStep.textContent = message;
     progressPercentage.textContent = `${percent}%`;
   }
 
-  // Function to show error message
   function showError(message) {
     loadingStateDiv.classList.add("hidden");
     initialStateDiv.classList.remove("hidden");
-    
     let userMessage = message;
     if (message.includes("Server connection failed")) {
       userMessage = "Cannot connect to the analysis server. Please make sure the Python server is running by executing 'python server.py' in the server directory.";
     }
-    
     const errorDiv = document.createElement("div");
     errorDiv.className = "message error";
     errorDiv.innerHTML = `
@@ -204,10 +162,8 @@ document.addEventListener("DOMContentLoaded", function() {
         <p><strong>Error:</strong> ${userMessage}</p>
       </div>
     `;
-    
     errorContainer.innerHTML = "";
     errorContainer.appendChild(errorDiv);
-    
     setTimeout(() => {
       errorDiv.classList.add("fade-out");
       setTimeout(() => {
@@ -218,28 +174,21 @@ document.addEventListener("DOMContentLoaded", function() {
     }, 10000);
   }
 
-  // Function to display URL info in the loading state
   function displayUrlInfo(platform, url) {
     const urlInfoDiv = document.createElement("div");
     urlInfoDiv.className = "url-info";
-    
-    // Create a clean URL for display (remove long query parameters)
     const displayUrl = cleanUrlForDisplay(url);
-    
     urlInfoDiv.innerHTML = `
       <p><strong>Platform:</strong> <span class="platform-badge"><i class="${getPlatformIcon(platform)}"></i> ${platform}</span></p>
       <p><strong>URL:</strong> ${displayUrl}</p>
     `;
-    
     const urlInfoContainer = document.getElementById("url-info-container");
     urlInfoContainer.innerHTML = "";
     urlInfoContainer.appendChild(urlInfoDiv);
   }
 
-  // Function to get platform display name
   function getPlatformDisplayName(platform) {
     if (!platform) return "Unknown";
-    
     switch(platform.toLowerCase()) {
       case "youtube": return "YouTube";
       case "facebook": return "Facebook";
@@ -249,10 +198,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // Function to get platform icon class
   function getPlatformIcon(platform) {
     if (!platform) return "fa-solid fa-video";
-    
     switch(platform.toLowerCase()) {
       case "youtube":
       case "YouTube": return "fab fa-youtube";
@@ -266,10 +213,8 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // Function to detect platform from URL
   function detectPlatformFromUrl(url) {
     if (!url) return null;
-    
     if (url.includes("youtube.com/watch") || url.includes("youtu.be/")) {
       return "youtube";
     } else if ((url.includes("twitter.com/") || url.includes("x.com/")) && url.includes("/status/")) {
@@ -279,11 +224,9 @@ document.addEventListener("DOMContentLoaded", function() {
     } else if (url.includes("reddit.com/r/") && url.includes("/comments/")) {
       return "reddit";
     }
-    
     return null;
   }
 
-  // Function to handle platform detection result
   function handlePlatformDetection(platform, url) {
     if (platform) {
       notVideoPageDiv.classList.add("hidden");
@@ -298,32 +241,22 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // Function to initialize donut charts (for view_result.html)
-  function initDonutCharts() {
-    // No action needed - we've replaced the donut charts with simple text displays in popup.html
-  }
+  function initDonutCharts() { }
 
-  // Function to update donut chart with percentage (for view_result.html)
-  function updateDonutChart(circleElement, percentage) {
-    // No action needed - we've replaced the donut charts with simple text displays in popup.html
-  }
+  function updateDonutChart(circleElement, percentage) { }
 
-  // Function to clean URL for display
   function cleanUrlForDisplay(url) {
     try {
       const urlObj = new URL(url);
-      // For YouTube URLs, keep only the video ID parameter
-      if (urlObj.hostname.includes('youtube.com')) {
-        return `${urlObj.origin}${urlObj.pathname}?v=${urlObj.searchParams.get('v')}`;
+      if (urlObj.hostname.includes("youtube.com")) {
+        return `${urlObj.origin}${urlObj.pathname}?v=${urlObj.searchParams.get("v")}`;
       }
-      // For other platforms, just use origin and pathname
       return `${urlObj.origin}${urlObj.pathname}`;
     } catch (e) {
       return url;
     }
   }
 
-  // Function to generate explanation text based on score
   function generateExplanationText(fakeScore) {
     if (fakeScore > 90) {
       return "This video shows significant facial inconsistencies between frames, strongly indicating AI manipulation. The high percentage of detected anomalies suggests this is likely AI-generated content.";

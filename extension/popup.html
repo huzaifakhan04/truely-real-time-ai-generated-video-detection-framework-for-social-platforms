@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="popup.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <title>Truely AI Video Detector</title>
+  <title>Truely - AI-Generated Video Detector</title>
 </head>
 <body>
   <div class="container">
@@ -14,10 +14,9 @@
       <img src="icons/icon48.png" alt="Truely logo" class="header-icon">
       <div class="header-branding">
         <h1>Truely</h1>
-        <span class="header-tagline">AI Video Detection</span>
+        <span class="header-tagline">AI-Generated Video Detector</span>
       </div>
     </header>
-    
     <div id="not-youtube" class="hidden message error">
       <div class="message-icon">
         <i class="fas fa-exclamation-circle"></i>
@@ -27,7 +26,6 @@
         <p>Please navigate to a YouTube, Facebook, Twitter, or Reddit video page and try again.</p>
       </div>
     </div>
-    
     <div id="youtube-content" class="hidden">
       <div id="initial-state" class="state-transition">
         <div class="message info">
@@ -38,14 +36,11 @@
             <p>Detect AI-generated content in this <span id="platform-name">video</span> with our advanced facial analysis technology.</p>
           </div>
         </div>
-        
         <div id="error-container"></div>
-        
         <button id="analyze-btn" class="btn primary-btn focus-visible" aria-label="Analyze video for AI-generated content">
           <span>Analyze Video</span>
           <i class="fas fa-arrow-right btn-icon"></i>
         </button>
-        
         <div class="feature-list">
           <div class="feature-item">
             <div class="feature-icon-wrapper">
@@ -56,7 +51,6 @@
               <div class="feature-text">Analyze facial inconsistencies between frames to detect AI manipulation</div>
             </div>
           </div>
-          
           <div class="feature-item">
             <div class="feature-icon-wrapper">
               <i class="fas fa-bolt feature-icon"></i>
@@ -66,7 +60,6 @@
               <div class="feature-text">Get results in seconds with our optimized detection algorithms</div>
             </div>
           </div>
-          
           <div class="feature-item">
             <div class="feature-icon-wrapper">
               <i class="fas fa-chart-line feature-icon"></i>
@@ -78,10 +71,8 @@
           </div>
         </div>
       </div>
-      
       <div id="loading-state" class="hidden state-transition">
         <div id="url-info-container"></div>
-        
         <div class="progress">
           <div class="progress-header">
             <div id="progress-step">Downloading video...</div>
@@ -93,33 +84,26 @@
             </div>
           </div>
         </div>
-        
         <div class="loading-animation">
           <div class="loader-ring">
             <div></div>
             <div></div>
           </div>
         </div>
-        
         <p class="text-center text-muted">Please wait while we analyze your video for AI-generated content...</p>
       </div>
-      
       <div id="result-state" class="hidden state-transition">
         <div id="result-url-info"></div>
-        
         <div id="real-result" class="result-box hidden">
           <div class="result-icon">
             <i class="fas fa-check-circle"></i>
           </div>
           <h2>Authentic Video Detected</h2>
-          
           <div class="score-display real" role="img" aria-label="Authenticity score">
             <p class="percentage" id="real-score">100%</p>
             <p class="label">Authentic</p>
           </div>
-          
           <p>This video appears to be authentic with no significant signs of AI manipulation.</p>
-          
           <div class="report-section">
             <h3><i class="fas fa-clipboard-check"></i> Analysis Details</h3>
             <div class="report-details">
@@ -138,20 +122,16 @@
             </div>
           </div>
         </div>
-        
         <div id="fake-result" class="result-box hidden">
           <div class="result-icon">
             <i class="fas fa-robot"></i>
           </div>
           <h2>AI-Generated Content Detected</h2>
-          
           <div class="score-display fake" role="img" aria-label="AI detection score">
             <p class="percentage" id="fake-score">95%</p>
             <p class="label">AI-Generated</p>
           </div>
-          
           <p id="fake-explanation">This video shows signs of facial inconsistency between frames, which is a common indicator of AI-generated or deepfake content.</p>
-          
           <div class="report-section">
             <h3><i class="fas fa-chart-bar"></i> Analysis Details</h3>
             <div class="report-details">
@@ -169,25 +149,21 @@
               </div>
             </div>
           </div>
-          
           <a id="detailed-view-link" href="#" target="_blank" class="btn secondary-btn focus-visible" aria-label="View detailed analysis report">
             <i class="fas fa-chart-line btn-icon"></i>
             <span>View Detailed Analysis</span>
           </a>
         </div>
-        
         <button id="analyze-again-btn" class="btn primary-btn focus-visible" aria-label="Analyze the video again">
           <i class="fas fa-rotate btn-icon"></i>
           <span>Analyze Again</span>
         </button>
-        
         <button id="share-result-btn" class="btn secondary-btn share-btn" aria-label="Share this analysis result">
           <i class="fas fa-share-alt btn-icon"></i>
           <span>Share Result</span>
         </button>
       </div>
     </div>
-    
     <footer>
       <div class="footer-logo">
         <img src="icons/icon16.png" alt="Truely icon">

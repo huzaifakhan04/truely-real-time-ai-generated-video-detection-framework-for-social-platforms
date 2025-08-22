@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "AI-Generated Video Detector",
+  "name": "Truely - AI-Generated Video Detector",
   "version": "1.4.0",
   "description": "Detects AI-generated content in YouTube, Twitter, Facebook, and Reddit videos.",
   "icons": {

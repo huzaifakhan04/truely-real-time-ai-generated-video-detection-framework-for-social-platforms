@@ -3,18 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Truely - AI Video Detection Report</title>
+    <title>Truely - AI-Generated Video Detector</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+
         :root {
-            /* Brand colors - more sophisticated and trustworthy palette */
             --primary-color: #3b82f6;
             --primary-dark: #2563eb;
             --primary-light: #dbeafe;
             --primary-bg: #f0f7ff;
-            
-            /* Status colors - more refined */
             --success-color: #059669;
             --success-light: #d1fae5;
             --success-bg: #ecfdf5;
@@ -27,40 +25,28 @@
             --info-color: #3b82f6;
             --info-light: #dbeafe;
             --info-bg: #eff6ff;
-            
-            /* Neutral colors - more tonal variety for professional layouts */
             --text-primary: #111827;
             --text-secondary: #374151;
             --text-tertiary: #6b7280;
             --text-quaternary: #9ca3af;
             --text-inverted: #ffffff;
-            
-            /* Background colors */
             --background-color: #f9fafb;
             --background-alt: #f3f4f6;
             --card-background: #ffffff;
             --background-subtle: #f3f4f6;
-            
-            /* Border colors */
             --border-color: #e5e7eb;
             --border-color-light: #f3f4f6;
             --border-color-focus: #93c5fd;
-            
-            /* Shape properties */
             --border-radius-sm: 6px;
             --border-radius: 8px;
             --border-radius-md: 12px;
             --border-radius-lg: 16px;
             --border-radius-full: 9999px;
-            
-            /* Elevation/Shadows */
             --shadow-xs: 0px 1px 2px rgba(16, 24, 40, 0.05);
             --shadow-sm: 0px 1px 3px rgba(16, 24, 40, 0.1), 0px 1px 2px rgba(16, 24, 40, 0.06);
             --shadow-md: 0px 4px 6px -1px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.1);
             --shadow-lg: 0px 10px 15px -3px rgba(16, 24, 40, 0.1), 0px 4px 6px -4px rgba(16, 24, 40, 0.1);
             --shadow-focus: 0px 0px 0px 4px var(--border-color-focus);
-            
-            /* Animation speeds */
             --transition-fast: 150ms;
             --transition-normal: 250ms;
             --transition-slow: 350ms;
@@ -554,13 +540,11 @@
             }
         }
         
-        /* Minimizing all animations for cleaner look */
         .btn, .card, .stat-card, .feature-item, .footer-links a {
             transition: box-shadow var(--transition-normal), background-color var(--transition-normal), color var(--transition-normal);
             transform: none !important;
         }
         
-        /* Colors for icon boxes */
         .icon-red {
             color: #dc2626;
         }
@@ -577,6 +561,7 @@
                 scroll-behavior: auto !important;
             }
         }
+        
     </style>
 </head>
 <body>
@@ -590,7 +575,6 @@
             <p class="header-subtitle">Comprehensive Analysis Results</p>
         </div>
     </div>
-
     <div class="container">
         <div class="card">
             <div class="card-header">
@@ -609,7 +593,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="grid">
                     <div class="stat-card">
                         <div class="stat-icon error">
@@ -620,7 +603,6 @@
                             <div class="stat-value">{{ fake_score }}%</div>
                         </div>
                     </div>
-                    
                     <div class="stat-card">
                         <div class="stat-icon {% if fake_score > 80 %}error{% elif fake_score > 50 %}warning{% else %}success{% endif %}">
                             <i class="fas fa-face-meh"></i>
@@ -637,7 +619,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div class="stat-card">
                         <div class="stat-icon {% if fake_score > 80 %}error{% elif fake_score > 50 %}warning{% else %}success{% endif %}">
                             <i class="fas fa-film"></i>
@@ -655,7 +636,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="explanation">
                     <h3><i class="fas fa-exclamation-triangle"></i> AI Detection Alert</h3>
                     <p>
@@ -674,14 +654,12 @@
                         Red bounding boxes in the video highlight frames where facial inconsistencies were detected.
                     </p>
                 </div>
-                
                 <a href="#" class="btn btn-outline" onclick="window.print()">
                     <i class="fas fa-download"></i>
                     Download Report
                 </a>
             </div>
         </div>
-
         <div class="card" id="video-section">
             <div class="card-header">
                 <h2><i class="fas fa-video"></i> Analyzed Video</h2>
@@ -693,7 +671,6 @@
                         Your browser does not support the video tag.
                     </video>
                 </div>
-
                 <div class="features">
                     <div class="feature-item">
                         <div class="feature-icon">
@@ -704,7 +681,6 @@
                             <div class="feature-desc">Indicate frames where facial inconsistencies were detected, suggesting AI manipulation.</div>
                         </div>
                     </div>
-                    
                     <div class="feature-item">
                         <div class="feature-icon">
                             <i class="fas fa-square icon-green"></i>
@@ -717,7 +693,6 @@
                 </div>
             </div>
         </div>
-
         <div class="card">
             <div class="card-header">
                 <h2><i class="fas fa-info-circle"></i> How Detection Works</h2>
@@ -733,7 +708,6 @@
                             <div class="feature-desc">Our system first identifies faces in each video frame using advanced face detection algorithms.</div>
                         </div>
                     </div>
-                    
                     <div class="feature-item">
                         <div class="feature-icon">
                             <i class="fas fa-2"></i>
@@ -743,7 +717,6 @@
                             <div class="feature-desc">Facial features are encoded using a neural network to create a unique "fingerprint" for each frame.</div>
                         </div>
                     </div>
-                    
                     <div class="feature-item">
                         <div class="feature-icon">
                             <i class="fas fa-3"></i>
@@ -753,7 +726,6 @@
                             <div class="feature-desc">Consecutive frames are compared to detect unnatural changes in facial features that exceed normal movement thresholds.</div>
                         </div>
                     </div>
-                    
                     <div class="feature-item">
                         <div class="feature-icon">
                             <i class="fas fa-4"></i>
@@ -766,7 +738,6 @@
                 </div>
             </div>
         </div>
-        
         <div class="card">
             <div class="card-header">
                 <h2><i class="fas fa-shield-alt"></i> Media Literacy Tips</h2>
@@ -782,7 +753,6 @@
                             <div class="feature-desc">Always check the source and authenticity of videos before sharing them on social media.</div>
                         </div>
                     </div>
-                    
                     <div class="feature-item">
                         <div class="feature-icon">
                             <i class="fas fa-search"></i>
@@ -792,7 +762,6 @@
                             <div class="feature-desc">Watch for unnatural facial movements, strange lighting, or inconsistent blinking patterns.</div>
                         </div>
                     </div>
-                    
                     <div class="feature-item">
                         <div class="feature-icon">
                             <i class="fas fa-newspaper"></i>
@@ -806,7 +775,6 @@
             </div>
         </div>
     </div>
-
     <footer>
         <div class="footer-logo">
             <img src="/static/icon16.png" alt="Truely Icon">

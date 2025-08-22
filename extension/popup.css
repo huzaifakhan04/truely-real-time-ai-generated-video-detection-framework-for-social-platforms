@@ -1,11 +1,8 @@
 :root {
-  /* Brand colors - more sophisticated and trustworthy palette */
   --primary-color: #3b82f6;
   --primary-dark: #2563eb;
   --primary-light: #dbeafe;
   --primary-bg: #f0f7ff;
-  
-  /* Status colors - more refined */
   --success-color: #059669;
   --success-light: #d1fae5;
   --success-bg: #ecfdf5;
@@ -18,39 +15,27 @@
   --info-color: #3b82f6;
   --info-light: #dbeafe;
   --info-bg: #eff6ff;
-  
-  /* Neutral colors - more tonal variety for professional layouts */
   --text-primary: #111827;
   --text-secondary: #374151;
   --text-tertiary: #6b7280;
   --text-quaternary: #9ca3af;
   --text-inverted: #ffffff;
-  
-  /* Background colors */
   --background-color: #ffffff;
   --background-alt: #f9fafb;
   --background-subtle: #f3f4f6;
-  
-  /* Border colors */
   --border-color: #e5e7eb;
   --border-color-light: #f3f4f6;
   --border-color-focus: #93c5fd;
-  
-  /* Shape properties */
   --border-radius-sm: 6px;
   --border-radius: 8px;
   --border-radius-md: 12px;
   --border-radius-lg: 16px;
   --border-radius-full: 9999px;
-  
-  /* Elevation/Shadows */
   --shadow-xs: 0px 1px 2px rgba(16, 24, 40, 0.05);
   --shadow-sm: 0px 1px 3px rgba(16, 24, 40, 0.1), 0px 1px 2px rgba(16, 24, 40, 0.06);
   --shadow-md: 0px 4px 6px -1px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.1);
   --shadow-lg: 0px 10px 15px -3px rgba(16, 24, 40, 0.1), 0px 4px 6px -4px rgba(16, 24, 40, 0.1);
   --shadow-focus: 0px 0px 0px 4px var(--border-color-focus);
-  
-  /* Animation speeds */
   --transition-fast: 150ms;
   --transition-normal: 250ms;
   --transition-slow: 350ms;
@@ -97,8 +82,6 @@ header {
   transition: transform var(--transition-normal) ease;
 }
 
-/* Removing hover scale animation */
-
 .header-branding {
   display: flex;
   flex-direction: column;
@@ -122,7 +105,6 @@ h1 {
   display: none !important;
 }
 
-/* Message boxes with modern style and animation */
 .message {
   padding: 16px;
   border-radius: var(--border-radius-md);
@@ -265,7 +247,6 @@ h3 {
   user-select: none;
 }
 
-/* Primary Button */
 .primary-btn {
   background: linear-gradient(to right, var(--primary-dark), var(--primary-color));
   color: var(--text-inverted);
@@ -309,7 +290,6 @@ h3 {
   z-index: 1;
 }
 
-/* Secondary Button */
 .secondary-btn {
   background-color: var(--background-color);
   color: var(--primary-color);
@@ -338,7 +318,6 @@ h3 {
   margin-top: 8px;
 }
 
-/* Tertiary/Text Button */
 .text-btn {
   background-color: transparent;
   color: var(--primary-color);
@@ -360,7 +339,6 @@ h3 {
   justify-content: center;
 }
 
-/* Button loading state */
 .btn.loading {
   position: relative;
   color: transparent !important;
@@ -605,7 +583,6 @@ h3 {
   color: var(--error-color);
 }
 
-/* Score display styles */
 .score-display {
   margin: 30px auto;
   text-align: center;
@@ -652,7 +629,6 @@ h3 {
   color: var(--text-secondary);
 }
 
-/* Donut chart styles - kept for view_result.html */
 .donut-chart {
   width: 120px;
   height: 120px;
@@ -662,7 +638,7 @@ h3 {
   animation: fadeIn 0.8s forwards;
   animation-delay: 0.3s;
   opacity: 0;
-  display: none; /* Hidden in popup */
+  display: none;
 }
 
 .donut-chart .label {
@@ -674,7 +650,6 @@ h3 {
   display: block;
 }
 
-/* Add subtle glow effect for emphasis */
 .donut-chart::after {
   content: "";
   position: absolute;
@@ -845,7 +820,6 @@ footer {
   font-family: "SF Mono", "Roboto Mono", monospace;
 }
 
-/* Loading animation */
 .loading-animation {
   display: flex;
   justify-content: center;
@@ -855,7 +829,6 @@ footer {
   position: relative;
 }
 
-/* Sophisticated loader animation */
 .loader-ring {
   display: inline-block;
   position: relative;
@@ -893,7 +866,6 @@ footer {
   }
 }
 
-/* Alternate loading dots */
 .loading-dots {
   display: flex;
   justify-content: center;
@@ -928,7 +900,6 @@ footer {
   }
 }
 
-/* Report styles */
 .report-section {
   margin: 20px 0;
   text-align: left;
@@ -1029,7 +1000,6 @@ footer {
   background-color: var(--success-light);
 }
 
-/* Animations */
 .fade-in {
   animation: fadeIn 0.5s ease-in-out forwards;
 }
@@ -1039,7 +1009,6 @@ footer {
   to { opacity: 1; }
 }
 
-/* Subtle state transitions */
 .state-transition {
   animation: stateFadeIn 0.6s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
   opacity: 0;
@@ -1053,7 +1022,6 @@ footer {
   }
 }
 
-/* Scale animation */
 .scale-in {
   animation: scaleIn 0.4s ease-out forwards;
 }
@@ -1069,13 +1037,11 @@ footer {
   }
 }
 
-/* Accessibility focus styles */
 .focus-visible:focus {
   outline: 2px solid var(--primary-color);
   outline-offset: 2px;
 }
 
-/* Media Query for smaller screens */
 @media (max-width: 360px) {
   body {
     min-width: 320px;
@@ -1104,7 +1070,6 @@ footer {
   }
 }
 
-/* Improving animations for reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   .fade-in,
   .state-transition,
