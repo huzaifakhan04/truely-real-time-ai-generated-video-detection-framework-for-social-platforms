@@ -95,7 +95,7 @@ The extension requires a local server to process videos:
 ### Using the Extension
 
 1. Click the extension icon in your browser toolbar.
-2. Select a video to analyze or provide a YouTube URL.
+2. Select a video to analyze.
 3. Click "Analyze Video".
 4. View the analysis results directly in the extension popup.
 5. For detailed analysis, you can view the full report in a new tab.
