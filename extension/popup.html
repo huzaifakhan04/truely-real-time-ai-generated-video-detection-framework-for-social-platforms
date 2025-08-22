@@ -4,47 +4,155 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="popup.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <title>AI-Generated Video Detector</title>
 </head>
 <body>
   <div class="container">
     <header>
+      <img src="icons/icon48.png" alt="Extension logo" class="header-icon">
       <h1>AI-Generated Video Detector</h1>
     </header>
+    
     <div id="not-youtube" class="hidden message error">
-      <p id="unsupported-message">This extension only works on video pages.</p>
-      <p>Please navigate to a YouTube, Facebook, Twitter, or Reddit video page and try again.</p>
-    </div>
-    <div id="youtube-content" class="hidden">
-      <div id="initial-state">
-        <p>Click the button below to analyze this <span id="platform-name">video</span> for AI-generated content.</p>
-        <button id="analyze-btn" class="primary-btn">Analyze Video</button>
+      <div class="message-icon">
+        <i class="fas fa-exclamation-circle"></i>
       </div>
-      <div id="loading-state" class="hidden">
+      <div class="message-content">
+        <p id="unsupported-message">This extension only works on video pages.</p>
+        <p>Please navigate to a YouTube, Facebook, Twitter, or Reddit video page and try again.</p>
+      </div>
+    </div>
+    
+    <div id="youtube-content" class="hidden">
+      <div id="initial-state" class="fade-in">
+        <div class="message info">
+          <div class="message-icon">
+            <i class="fas fa-info-circle"></i>
+          </div>
+          <div class="message-content">
+            <p>Detect AI-generated content in this <span id="platform-name">video</span> by analyzing facial inconsistencies between frames.</p>
+          </div>
+        </div>
+        
+        <div id="error-container"></div>
+        
+        <button id="analyze-btn" class="btn primary-btn">
+          <i class="fas fa-magnifying-glass"></i>
+          Analyze Video
+        </button>
+      </div>
+      
+      <div id="loading-state" class="hidden fade-in">
+        <div id="url-info-container"></div>
+        
         <div class="progress">
-          <div id="progress-step">Downloading video...</div>
+          <div class="progress-header">
+            <div id="progress-step">Downloading video...</div>
+            <div class="progress-percentage">0%</div>
+          </div>
           <div class="progress-bar">
             <div id="progress-indicator"></div>
           </div>
         </div>
+        
+        <div class="loading-animation">
+          <div class="loading-dot"></div>
+          <div class="loading-dot"></div>
+          <div class="loading-dot"></div>
+        </div>
       </div>
-      <div id="result-state" class="hidden">
+      
+      <div id="result-state" class="hidden fade-in">
+        <div id="result-url-info"></div>
+        
         <div id="real-result" class="result-box success hidden">
+          <div class="result-icon">
+            <i class="fas fa-check-circle"></i>
+          </div>
           <h2>Real Video Detected</h2>
-          <div id="real-score" class="score">100% Real</div>
-          <p>This video appears to be authentic with no signs of AI manipulation.</p>
+          
+          <div class="donut-chart real">
+            <svg viewBox="0 0 36 36">
+              <circle class="background" cx="18" cy="18" r="15.91549430918954" stroke-dasharray="100 0" stroke-dashoffset="0"></circle>
+              <circle class="progress" id="real-progress" cx="18" cy="18" r="15.91549430918954" stroke-dasharray="100 0" stroke-dashoffset="0"></circle>
+            </svg>
+            <div class="text">
+              <p class="percentage" id="real-score">100%</p>
+              <p class="label">Real</p>
+            </div>
+          </div>
+          
+          <p>This video appears to be authentic with no significant signs of AI manipulation.</p>
+          
+          <div class="report-section">
+            <h3>Analysis Details</h3>
+            <div class="report-detail">
+              <span class="report-detail-label">Facial Consistency</span>
+              <span class="report-detail-value low" id="real-consistency">High</span>
+            </div>
+            <div class="report-detail">
+              <span class="report-detail-label">Frame Anomalies</span>
+              <span class="report-detail-value low" id="real-anomalies">Low</span>
+            </div>
+          </div>
         </div>
+        
         <div id="fake-result" class="result-box error hidden">
+          <div class="result-icon">
+            <i class="fas fa-robot"></i>
+          </div>
           <h2>AI-Generated Content Detected</h2>
-          <div id="fake-score" class="score">95% AI-Generated</div>
+          
+          <div class="donut-chart fake">
+            <svg viewBox="0 0 36 36">
+              <circle class="background" cx="18" cy="18" r="15.91549430918954" stroke-dasharray="100 0" stroke-dashoffset="0"></circle>
+              <circle class="progress" id="fake-progress" cx="18" cy="18" r="15.91549430918954" stroke-dasharray="100 0" stroke-dashoffset="0"></circle>
+            </svg>
+            <div class="text">
+              <p class="percentage" id="fake-score">95%</p>
+              <p class="label">AI-Generated</p>
+            </div>
+          </div>
+          
           <p id="fake-explanation">This video shows signs of facial inconsistency between frames, which is a common indicator of AI-generated or deepfake content.</p>
-          <a id="detailed-view-link" href="#" target="_blank" class="secondary-btn">View Detailed Analysis</a>
+          
+          <div class="report-section">
+            <h3>Analysis Details</h3>
+            <div class="report-detail">
+              <span class="report-detail-label">Facial Consistency</span>
+              <span class="report-detail-value high" id="fake-consistency">Low</span>
+            </div>
+            <div class="report-detail">
+              <span class="report-detail-label">Frame Anomalies</span>
+              <span class="report-detail-value high" id="fake-anomalies">High</span>
+            </div>
+            <div class="report-detail">
+              <span class="report-detail-label">Confidence</span>
+              <span class="report-detail-value high" id="fake-confidence">High</span>
+            </div>
+          </div>
+          
+          <a id="detailed-view-link" href="#" target="_blank" class="btn secondary-btn">
+            <i class="fas fa-chart-line"></i>
+            View Detailed Analysis
+          </a>
         </div>
-        <button id="analyze-again-btn" class="primary-btn">Analyze Again</button>
+        
+        <button id="analyze-again-btn" class="btn primary-btn">
+          <i class="fas fa-rotate"></i>
+          Analyze Again
+        </button>
       </div>
     </div>
+    
     <footer>
       <p>AI-Generated Video Detection Tool</p>
+      <div class="footer-links">
+        <a href="https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool" class="footer-link" target="_blank" rel="noopener">GitHub</a>
+        <a href="#" class="footer-link" id="about-link">About</a>
+      </div>
     </footer>
   </div>
   <script src="popup.js"></script>

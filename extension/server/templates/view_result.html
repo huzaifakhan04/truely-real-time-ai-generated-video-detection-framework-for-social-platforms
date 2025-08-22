@@ -3,75 +3,514 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI-Generated Video Detection Result</title>
+    <title>AI-Generated Video Detection - Detailed Analysis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #5469d4;
+            --primary-light: #eaecf9;
+            --success-color: #10b981;
+            --success-light: #ecfdf5;
+            --error-color: #ef4444;
+            --error-light: #fef2f2;
+            --warning-color: #f59e0b;
+            --warning-light: #fffbeb;
+            --text-primary: #1f2937;
+            --text-secondary: #4b5563;
+            --text-tertiary: #9ca3af;
+            --background-color: #f9fafb;
+            --card-background: #ffffff;
+            --border-color: #e5e7eb;
+            --border-radius: 12px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
         
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+        }
+
+        .header {
+            background-color: var(--card-background);
+            box-shadow: var(--shadow-sm);
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-weight: 600;
+            font-size: 1.75rem;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
         }
 
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-header h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-header h2 i {
+            margin-right: 0.75rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
         }
         
-        h1 {
-            color: #333;
+        .score-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem 0;
+        }
+
+        .score-ring {
+            position: relative;
+            width: 200px;
+            height: 200px;
+        }
+
+        .score-circle {
+            fill: none;
+            stroke-width: 10;
+        }
+
+        .score-circle.bg {
+            stroke: var(--error-light);
+        }
+
+        .score-circle.progress {
+            stroke: var(--error-color);
+            stroke-linecap: round;
+            transform-origin: center;
+            transform: rotate(-90deg);
+        }
+
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .score-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--error-color);
+            line-height: 1;
+        }
+
+        .score-label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-background);
+            border-radius: var(--border-radius);
+            padding: 1.25rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .stat-icon i {
+            font-size: 1.5rem;
+        }
+        
+        .stat-icon.warning {
+            background: var(--warning-light);
+            color: var(--warning-color);
+        }
+        
+        .stat-icon.error {
+            background: var(--error-light);
+            color: var(--error-color);
+        }
+        
+        .stat-icon.success {
+            background: var(--success-light);
+            color: var(--success-color);
+        }
+
+        .stat-content {
+            flex: 1;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
         .video-container {
-            margin: 20px 0;
+            margin: 1.5rem 0;
+            position: relative;
+            padding-top: 56.25%;
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            background: #000;
         }
 
-        video {
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
         }
 
-        .score {
-            font-size: 24px;
-            font-weight: bold;
-            margin: 20px 0;
+        .explanation {
+            background: var(--error-light);
+            border-radius: var(--border-radius);
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-left: 4px solid var(--error-color);
         }
 
-        .fake {
-            color: #db4437;
+        .explanation h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--error-color);
+            margin-bottom: 0.5rem;
         }
 
-        p {
-            line-height: 1.6;
-            color: #555;
+        .explanation p {
+            color: var(--text-primary);
+            font-size: 0.9375rem;
+            margin: 0.5rem 0;
         }
 
+        .features {
+            margin: 1.5rem 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1.25rem;
+        }
+
+        .feature-icon {
+            flex-shrink: 0;
+            width: 24px;
+            color: var(--primary-color);
+            margin-right: 1rem;
+            text-align: center;
+        }
+
+        .feature-content {
+            flex: 1;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: var(--text-primary);
+        }
+
+        .feature-desc {
+            color: var(--text-secondary);
+            font-size: 0.9375rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            background-color: var(--card-background);
+            margin-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-tertiary);
+            font-size: 0.875rem;
+        }
+
+        .footer-links {
+            margin-top: 0.75rem;
+        }
+
+        .footer-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            margin: 0 0.75rem;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+            
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .score-ring {
+                width: 150px;
+                height: 150px;
+            }
+            
+            .score-value {
+                font-size: 2.5rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>AI-Generated Video Detection Result</h1>
-        <div class="score fake">{{ fake_score }}% AI-Generated</div>
-        <p>
-            This video shows signs of AI manipulation. Red bounding boxes highlight frames where 
-            facial inconsistencies were detected between consecutive frames, which is a common 
-            indicator of deepfake or AI-generated content.
-        </p>
-        <div class="video-container">
-            <video controls>
-                <source src="{{ video_url }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
-        </div>
-        <p>
-            <strong>How the detection works:</strong><br>
-            The system analyzes facial consistency between frames. Sudden changes in facial features 
-            that exceed natural movement thresholds are flagged as suspicious (red boxes). Multiple 
-            suspicious frames contribute to the overall AI-generated confidence score.
-        </p>
+    <div class="header">
+        <h1>AI-Generated Video Detection Report</h1>
+        <p class="header-subtitle">Detailed Analysis Results</p>
     </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-chart-pie"></i> Detection Results</h2>
+            </div>
+            <div class="card-body">
+                <div class="score-container">
+                    <div class="score-ring">
+                        <svg viewBox="0 0 100 100">
+                            <circle class="score-circle bg" cx="50" cy="50" r="45" />
+                            <circle class="score-circle progress" cx="50" cy="50" r="45" stroke-dasharray="282.74" stroke-dashoffset="{{ 282.74 * (100 - fake_score) / 100 }}" />
+                        </svg>
+                        <div class="score-text">
+                            <div class="score-value">{{ fake_score }}%</div>
+                            <div class="score-label">AI-Generated</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid">
+                    <div class="stat-card">
+                        <div class="stat-icon error">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">AI Probability</div>
+                            <div class="stat-value">{{ fake_score }}%</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon {% if fake_score > 80 %}error{% elif fake_score > 50 %}warning{% else %}success{% endif %}">
+                            <i class="fas fa-face-meh"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Facial Consistency</div>
+                            <div class="stat-value">
+                                {% if fake_score > 80 %}Very Low
+                                {% elif fake_score > 60 %}Low
+                                {% elif fake_score > 40 %}Medium
+                                {% elif fake_score > 20 %}High
+                                {% else %}Very High
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon {% if fake_score > 80 %}error{% elif fake_score > 50 %}warning{% else %}success{% endif %}">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Abnormal Frames</div>
+                            <div class="stat-value">
+                                {% if fake_score > 80 %}Very High
+                                {% elif fake_score > 60 %}High
+                                {% elif fake_score > 40 %}Medium
+                                {% elif fake_score > 20 %}Low
+                                {% else %}Very Low
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="explanation">
+                    <h3><i class="fas fa-exclamation-triangle"></i> AI Detection Alert</h3>
+                    <p>
+                        This video shows signs of AI manipulation based on our analysis of facial consistency between frames.
+                        {% if fake_score > 80 %}
+                        The very high detection score indicates significant inconsistencies that are hallmarks of synthetic media.
+                        {% elif fake_score > 60 %}
+                        The high detection score indicates notable inconsistencies that are common in AI-generated content.
+                        {% elif fake_score > 40 %}
+                        The moderate detection score indicates some inconsistencies that may suggest partial AI modification.
+                        {% else %}
+                        While the detection score is relatively low, some minor inconsistencies were still detected.
+                        {% endif %}
+                    </p>
+                    <p>
+                        Red bounding boxes in the video highlight frames where facial inconsistencies were detected.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-video"></i> Analyzed Video</h2>
+            </div>
+            <div class="card-body">
+                <div class="video-container">
+                    <video controls>
+                        <source src="{{ video_url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-square"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">Red Bounding Boxes</div>
+                            <div class="feature-desc">Indicate frames where facial inconsistencies were detected, suggesting AI manipulation.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-square"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">Green Bounding Boxes</div>
+                            <div class="feature-desc">Indicate frames where facial features appear consistent, suggesting authentic content.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-info-circle"></i> How Detection Works</h2>
+            </div>
+            <div class="card-body">
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-1"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">Face Detection</div>
+                            <div class="feature-desc">Our system first identifies faces in each video frame using advanced face detection algorithms.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-2"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">Feature Encoding</div>
+                            <div class="feature-desc">Facial features are encoded using a neural network to create a unique "fingerprint" for each frame.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-3"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">Consistency Analysis</div>
+                            <div class="feature-desc">Consecutive frames are compared to detect unnatural changes in facial features that exceed normal movement thresholds.</div>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">
+                            <i class="fas fa-4"></i>
+                        </div>
+                        <div class="feature-content">
+                            <div class="feature-title">Anomaly Flagging</div>
+                            <div class="feature-desc">Frames with suspicious inconsistencies are flagged, and multiple flags contribute to the overall AI-generated confidence score.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>AI-Generated Video Detection Tool</p>
+        <div class="footer-links">
+            <a href="https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool" target="_blank" rel="noopener">GitHub</a>
+            <a href="https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool/blob/main/README.md" target="_blank" rel="noopener">About</a>
+        </div>
+    </footer>
+
 </body>
 </html>
