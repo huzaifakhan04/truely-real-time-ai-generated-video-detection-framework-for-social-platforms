@@ -290,6 +290,14 @@ h3 {
   z-index: 1;
 }
 
+.primary-btn svg,
+.primary-btn img,
+.primary-btn i {
+  position: relative;
+  top: 2px;
+  vertical-align: middle;
+}
+
 .secondary-btn {
   background-color: var(--background-color);
   color: var(--primary-color);
