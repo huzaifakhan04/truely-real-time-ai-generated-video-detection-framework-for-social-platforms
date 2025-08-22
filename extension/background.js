@@ -1,6 +1,60 @@
 const SERVER_URL = "http://localhost:5001";
 
+// Check authentication when extension is installed or updated
+chrome.runtime.onInstalled.addListener(function() {
+  checkAuthentication();
+});
+
+// Check authentication status
+async function checkAuthentication() {
+  chrome.storage.local.get(['session'], function(result) {
+    if (!result.session) {
+      // No session found, user needs to authenticate
+      console.log("No authentication session found");
+      return;
+    } 
+    
+    // Check if session is expired
+    const expiresAt = result.session.expires_at * 1000; // Convert to milliseconds
+    if (Date.now() > expiresAt) {
+      console.log("Session expired, redirecting to login");
+      // We don't attempt to refresh here - that will be handled by auth.js
+      // Just log the user out
+      chrome.storage.local.remove(['session']);
+    } else {
+      console.log("User is authenticated");
+    }
+  });
+}
+
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.action === "checkAuth") {
+    chrome.storage.local.get(['session'], function(result) {
+      sendResponse({isAuthenticated: !!result.session});
+    });
+    return true;
+  }
+  
+  if (request.action === "logout") {
+    // Attempt to connect to Supabase to log out the user
+    try {
+      const supabaseUrl = 'https://lgfgocwqlfpnkcteiyen.supabase.co';
+      const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxnZmdvY3dxbGZwbmtjdGVpeWVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4OTY3NTEsImV4cCI6MjA3MTQ3Mjc1MX0.tSKgaRayWwnfNmYLM8GYzjfSPRRWMNvxqgNxATp0IPc';
+      
+      // Just clear the local storage - the actual sign-out will be handled in auth.js if needed
+      chrome.storage.local.remove(['session'], function() {
+        sendResponse({success: true});
+      });
+    } catch(e) {
+      console.error("Error during logout:", e);
+      // Still remove the session from storage even if Supabase call fails
+      chrome.storage.local.remove(['session'], function() {
+        sendResponse({success: true});
+      });
+    }
+    return true;
+  }
+  
   if (request.action === "downloadVideo") {
     if (request.videoId) {
       downloadYoutubeVideo(request.videoId)

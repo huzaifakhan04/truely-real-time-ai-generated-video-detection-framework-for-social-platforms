@@ -1,25 +1,80 @@
 document.addEventListener("DOMContentLoaded", function() {
+  // First check if the user is authenticated by checking for a valid session
+  chrome.storage.local.get(['session'], function(result) {
+    if (!result.session) {
+      // If no session, redirect to auth page
+      window.location.href = "auth.html";
+      return;
+    }
+    
+    // Check if session is expired
+    const expiresAt = result.session.expires_at * 1000; // Convert to milliseconds
+    if (Date.now() > expiresAt) {
+      // Session expired, redirect to auth page
+      chrome.storage.local.remove(['session'], function() {
+        window.location.href = "auth.html";
+      });
+      return;
+    }
+    
+    // Session is valid, load user profile info if we have a profile.js script
+    try {
+      if (typeof loadUserProfile === 'function') {
+        loadUserProfile(result.session.user);
+      }
+    } catch(e) {
+      console.log('Profile module not loaded or function not available');
+    }
+    
+    // If authenticated, continue with the normal popup flow
+    initializePopup();
+  });
 
-  const analyzeBtn = document.getElementById("analyze-btn");
-  const analyzeAgainBtn = document.getElementById("analyze-again-btn");
-  const notVideoPageDiv = document.getElementById("not-youtube");
-  const videoContentDiv = document.getElementById("youtube-content");
-  const initialStateDiv = document.getElementById("initial-state");
-  const loadingStateDiv = document.getElementById("loading-state");
-  const resultStateDiv = document.getElementById("result-state");
-  const realResultDiv = document.getElementById("real-result");
-  const fakeResultDiv = document.getElementById("fake-result");
-  const realScoreElem = document.getElementById("real-score");
-  const fakeScoreElem = document.getElementById("fake-score");
-  const fakeExplanationP = document.getElementById("fake-explanation");
-  const detailedViewLink = document.getElementById("detailed-view-link");
-  const progressIndicator = document.getElementById("progress-indicator");
-  const progressStep = document.getElementById("progress-step");
-  const progressPercentage = document.querySelector(".progress-percentage");
-  const errorContainer = document.getElementById("error-container");
-  const realProgress = document.getElementById("real-progress");
-  const fakeProgress = document.getElementById("fake-progress");
-  const aboutLink = document.getElementById("about-link");
+  function initializePopup() {
+    // Add logout functionality to the existing popup.js
+    const aboutLink = document.getElementById("about-link");
+    const footer = document.querySelector("footer");
+    
+    // Add logout button to footer
+    const logoutLink = document.createElement("a");
+    logoutLink.href = "#";
+    logoutLink.className = "footer-link focus-visible";
+    logoutLink.id = "logout-link";
+    logoutLink.textContent = "Logout";
+    
+    // Insert logout link before about link
+    footer.querySelector('.footer-links').appendChild(logoutLink);
+    
+    // Add event listener for logout
+    logoutLink.addEventListener("click", function(e) {
+      e.preventDefault();
+      chrome.runtime.sendMessage({action: "logout"}, function(response) {
+        if (response.success) {
+          window.location.href = "auth.html";
+        }
+      });
+    });
+    
+    // Original popup.js code starts here
+    const analyzeBtn = document.getElementById("analyze-btn");
+    const analyzeAgainBtn = document.getElementById("analyze-again-btn");
+    const notVideoPageDiv = document.getElementById("not-youtube");
+    const videoContentDiv = document.getElementById("youtube-content");
+    const initialStateDiv = document.getElementById("initial-state");
+    const loadingStateDiv = document.getElementById("loading-state");
+    const resultStateDiv = document.getElementById("result-state");
+    const realResultDiv = document.getElementById("real-result");
+    const fakeResultDiv = document.getElementById("fake-result");
+    const realScoreElem = document.getElementById("real-score");
+    const fakeScoreElem = document.getElementById("fake-score");
+    const fakeExplanationP = document.getElementById("fake-explanation");
+    const detailedViewLink = document.getElementById("detailed-view-link");
+    const progressIndicator = document.getElementById("progress-indicator");
+    const progressStep = document.getElementById("progress-step");
+    const progressPercentage = document.querySelector(".progress-percentage");
+    const errorContainer = document.getElementById("error-container");
+    const realProgress = document.getElementById("real-progress");
+    const fakeProgress = document.getElementById("fake-progress");
 
   initDonutCharts();
 
@@ -266,5 +321,7 @@ document.addEventListener("DOMContentLoaded", function() {
       return `This video shows some signs of facial inconsistency between frames, which may indicate AI manipulation. ${fakeScore}% of analyzed frames appear to have been modified.`;
     }
   }
+  
+  } // End of initializePopup()
 
 });
