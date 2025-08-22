@@ -1,796 +1,796 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Truely - AI-Generated Video Detector</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Truely - AI-Generated Video Detector</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
 
-        :root {
-            --primary-color: #3b82f6;
-            --primary-dark: #2563eb;
-            --primary-light: #dbeafe;
-            --primary-bg: #f0f7ff;
-            --success-color: #059669;
-            --success-light: #d1fae5;
-            --success-bg: #ecfdf5;
-            --error-color: #dc2626;
-            --error-light: #fee2e2;
-            --error-bg: #fef2f2;
-            --warning-color: #d97706;
-            --warning-light: #fef3c7;
-            --warning-bg: #fffbeb;
-            --info-color: #3b82f6;
-            --info-light: #dbeafe;
-            --info-bg: #eff6ff;
-            --text-primary: #111827;
-            --text-secondary: #374151;
-            --text-tertiary: #6b7280;
-            --text-quaternary: #9ca3af;
-            --text-inverted: #ffffff;
-            --background-color: #f9fafb;
-            --background-alt: #f3f4f6;
-            --card-background: #ffffff;
-            --background-subtle: #f3f4f6;
-            --border-color: #e5e7eb;
-            --border-color-light: #f3f4f6;
-            --border-color-focus: #93c5fd;
-            --border-radius-sm: 6px;
-            --border-radius: 8px;
-            --border-radius-md: 12px;
-            --border-radius-lg: 16px;
-            --border-radius-full: 9999px;
-            --shadow-xs: 0px 1px 2px rgba(16, 24, 40, 0.05);
-            --shadow-sm: 0px 1px 3px rgba(16, 24, 40, 0.1), 0px 1px 2px rgba(16, 24, 40, 0.06);
-            --shadow-md: 0px 4px 6px -1px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.1);
-            --shadow-lg: 0px 10px 15px -3px rgba(16, 24, 40, 0.1), 0px 4px 6px -4px rgba(16, 24, 40, 0.1);
-            --shadow-focus: 0px 0px 0px 4px var(--border-color-focus);
-            --transition-fast: 150ms;
-            --transition-normal: 250ms;
-            --transition-slow: 350ms;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+            :root {
+                --primary-color: #3b82f6;
+                --primary-dark: #2563eb;
+                --primary-light: #dbeafe;
+                --primary-bg: #f0f7ff;
+                --success-color: #059669;
+                --success-light: #d1fae5;
+                --success-bg: #ecfdf5;
+                --error-color: #dc2626;
+                --error-light: #fee2e2;
+                --error-bg: #fef2f2;
+                --warning-color: #d97706;
+                --warning-light: #fef3c7;
+                --warning-bg: #fffbeb;
+                --info-color: #3b82f6;
+                --info-light: #dbeafe;
+                --info-bg: #eff6ff;
+                --text-primary: #111827;
+                --text-secondary: #374151;
+                --text-tertiary: #6b7280;
+                --text-quaternary: #9ca3af;
+                --text-inverted: #ffffff;
+                --background-color: #f9fafb;
+                --background-alt: #f3f4f6;
+                --card-background: #ffffff;
+                --background-subtle: #f3f4f6;
+                --border-color: #e5e7eb;
+                --border-color-light: #f3f4f6;
+                --border-color-focus: #93c5fd;
+                --border-radius-sm: 6px;
+                --border-radius: 8px;
+                --border-radius-md: 12px;
+                --border-radius-lg: 16px;
+                --border-radius-full: 9999px;
+                --shadow-xs: 0px 1px 2px rgba(16, 24, 40, 0.05);
+                --shadow-sm: 0px 1px 3px rgba(16, 24, 40, 0.1), 0px 1px 2px rgba(16, 24, 40, 0.06);
+                --shadow-md: 0px 4px 6px -1px rgba(16, 24, 40, 0.1), 0px 2px 4px -2px rgba(16, 24, 40, 0.1);
+                --shadow-lg: 0px 10px 15px -3px rgba(16, 24, 40, 0.1), 0px 4px 6px -4px rgba(16, 24, 40, 0.1);
+                --shadow-focus: 0px 0px 0px 4px var(--border-color-focus);
+                --transition-fast: 150ms;
+                --transition-normal: 250ms;
+                --transition-slow: 350ms;
+            }
+            
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
 
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-primary);
-            line-height: 1.6;
-            padding: 0;
-            margin: 0;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
+            body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                background-color: var(--background-color);
+                color: var(--text-primary);
+                line-height: 1.6;
+                padding: 0;
+                margin: 0;
+                -webkit-font-smoothing: antialiased;
+                -moz-osx-font-smoothing: grayscale;
+            }
 
-        .header {
-            background-color: var(--card-background);
-            box-shadow: var(--shadow-sm);
-            padding: 2rem 1.5rem;
-            text-align: center;
-            border-bottom: 1px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .header::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
-        }
-        
-        .header-content {
-            position: relative;
-            z-index: 1;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 1rem;
-        }
-        
-        .logo img {
-            height: 40px;
-            margin-right: 12px;
-        }
-        
-        .logo-text {
-            font-weight: 700;
-            font-size: 1.5rem;
-            color: var(--text-primary);
-        }
+            .header {
+                background-color: var(--card-background);
+                box-shadow: var(--shadow-sm);
+                padding: 2rem 1.5rem;
+                text-align: center;
+                border-bottom: 1px solid var(--border-color);
+                position: relative;
+                overflow: hidden;
+            }
+            
+            .header::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+            }
+            
+            .header-content {
+                position: relative;
+                z-index: 1;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            
+            .logo {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 1rem;
+            }
+            
+            .logo img {
+                height: 40px;
+                margin-right: 12px;
+            }
+            
+            .logo-text {
+                font-weight: 700;
+                font-size: 1.5rem;
+                color: var(--text-primary);
+            }
 
-        .header h1 {
-            font-weight: 600;
-            font-size: 1.75rem;
-            color: var(--text-primary);
-            margin-bottom: 0.25rem;
-        }
-        
-        .header-subtitle {
-            color: var(--text-secondary);
-            font-size: 1rem;
-        }
+            .header h1 {
+                font-weight: 600;
+                font-size: 1.75rem;
+                color: var(--text-primary);
+                margin-bottom: 0.25rem;
+            }
+            
+            .header-subtitle {
+                color: var(--text-secondary);
+                font-size: 1rem;
+            }
 
-        .container {
-            max-width: 1000px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
-        }
-
-        .card {
-            background: var(--card-background);
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-md);
-            margin-bottom: 2rem;
-            overflow: hidden;
-            transition: box-shadow var(--transition-normal);
-        }
-        
-        .card:hover {
-            box-shadow: var(--shadow-lg);
-        }
-
-        .card-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-color-light);
-            background-color: var(--background-alt);
-        }
-
-        .card-header h2 {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin: 0;
-            display: flex;
-            align-items: center;
-        }
-
-        .card-header h2 i {
-            margin-right: 0.75rem;
-            color: var(--primary-color);
-            font-size: 1.1em;
-        }
-
-        .card-body {
-            padding: 1.5rem;
-        }
-        
-        .score-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2.5rem 0 3rem;
-        }
-
-        .score-ring {
-            position: relative;
-            width: 220px;
-            height: 220px;
-            filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.06));
-        }
-
-        .score-circle {
-            fill: none;
-            stroke-width: 6;
-            stroke-linecap: round;
-            overflow: visible;
-        }
-
-        .score-circle.bg {
-            stroke: var(--background-subtle);
-        }
-
-        .score-circle.progress {
-            stroke: var(--error-color);
-            transition: stroke-dashoffset 1.5s cubic-bezier(0.165, 0.84, 0.44, 1);
-            filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.1));
-        }
-
-        .score-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .score-value {
-            font-size: 2.4rem;
-            font-weight: 700;
-            color: var(--error-color);
-            line-height: 1;
-            display: block;
-        }
-
-        .score-label {
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin-top: 0.5rem;
-            color: var(--text-secondary);
-            line-height: 1;
-            display: block;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .stat-card {
-            background: var(--card-background);
-            border-radius: var(--border-radius);
-            padding: 1.25rem;
-            box-shadow: var(--shadow-xs);
-            border: 1px solid var(--border-color-light);
-            display: flex;
-            align-items: center;
-            transition: box-shadow var(--transition-normal);
-        }
-        
-        .stat-card:hover {
-            box-shadow: var(--shadow-sm);
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: var(--primary-light);
-            color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 1rem;
-            flex-shrink: 0;
-        }
-        
-        .stat-icon i {
-            font-size: 1.5rem;
-        }
-        
-        .stat-icon.warning {
-            background: var(--warning-light);
-            color: var(--warning-color);
-        }
-        
-        .stat-icon.error {
-            background: var(--error-light);
-            color: var(--error-color);
-        }
-        
-        .stat-icon.success {
-            background: var(--success-light);
-            color: var(--success-color);
-        }
-
-        .stat-content {
-            flex: 1;
-        }
-
-        .stat-label {
-            font-size: 0.875rem;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .stat-value {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-top: 2px;
-        }
-
-        .video-container {
-            margin: 1.5rem 0;
-            position: relative;
-            padding-top: 56.25%;
-            overflow: hidden;
-            border-radius: var(--border-radius-md);
-            background: #000;
-            box-shadow: var(--shadow-md);
-        }
-
-        .video-container video {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-
-        .explanation {
-            background: var(--error-bg);
-            border-radius: var(--border-radius-md);
-            padding: 1.5rem;
-            margin: 2rem 0;
-            border-left: 4px solid var(--error-color);
-            position: relative;
-        }
-        
-        .explanation::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 80px;
-            height: 80px;
-            background: radial-gradient(circle, rgba(220, 38, 38, 0.05) 0%, rgba(220, 38, 38, 0) 70%);
-            z-index: 0;
-        }
-
-        .explanation h3 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: var(--error-color);
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .explanation p {
-            color: var(--text-primary);
-            font-size: 0.9375rem;
-            margin: 0.75rem 0;
-            position: relative;
-            z-index: 1;
-        }
-
-        .features {
-            margin: 1.75rem 0;
-        }
-
-        .feature-item {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 1.5rem;
-            padding: 0.5rem;
-            border-radius: var(--border-radius);
-            transition: background-color var(--transition-normal);
-        }
-        
-        .feature-item:hover {
-            background-color: var(--background-subtle);
-        }
-
-        .feature-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            width: 32px;
-            height: 32px;
-            border-radius: var(--border-radius-full);
-            background-color: var(--primary-light);
-            color: var(--primary-color);
-            margin-right: 1rem;
-        }
-
-        .feature-content {
-            flex: 1;
-        }
-
-        .feature-title {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-            color: var(--text-primary);
-        }
-
-        .feature-desc {
-            color: var(--text-secondary);
-            font-size: 0.9375rem;
-            line-height: 1.5;
-        }
-
-        footer {
-            text-align: center;
-            padding: 2.5rem 0;
-            background-color: var(--card-background);
-            margin-top: 3rem;
-            border-top: 1px solid var(--border-color-light);
-            color: var(--text-tertiary);
-            font-size: 0.875rem;
-        }
-
-        .footer-logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 0.75rem;
-        }
-
-        .footer-logo img {
-            height: 24px;
-            margin-right: 10px;
-        }
-        
-        .footer-logo span {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: var(--text-secondary);
-        }
-        
-        .footer-tagline {
-            color: var(--text-tertiary);
-            margin-bottom: 1rem;
-        }
-
-        .footer-links {
-            margin: 1rem 0;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 1.5rem;
-        }
-
-        .footer-links a {
-            color: var(--primary-color);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color var(--transition-normal);
-        }
-
-        .footer-links a:hover {
-            color: var(--primary-dark);
-            text-decoration: underline;
-        }
-        
-        .footer-meta {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 1rem;
-            color: var(--text-quaternary);
-            font-size: 0.8125rem;
-        }
-        
-        .footer-version {
-            background-color: var(--background-subtle);
-            padding: 2px 6px;
-            border-radius: var(--border-radius-sm);
-            font-family: monospace;
-        }
-        
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.25rem;
-            border-radius: var(--border-radius);
-            font-weight: 600;
-            font-size: 0.9375rem;
-            cursor: pointer;
-            transition: all var(--transition-normal);
-            text-decoration: none;
-            border: none;
-            margin-top: 1.5rem;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
-            color: white;
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .btn-primary:hover {
-            box-shadow: var(--shadow-md);
-        }
-        
-        .btn-outline {
-            background: transparent;
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-        }
-        
-        .btn-outline:hover {
-            background-color: var(--primary-light);
-        }
-        
-        @media (max-width: 768px) {
             .container {
-                padding: 0 1rem;
+                max-width: 1000px;
+                margin: 2rem auto;
+                padding: 0 1.5rem;
+            }
+
+            .card {
+                background: var(--card-background);
+                border-radius: var(--border-radius-lg);
+                box-shadow: var(--shadow-md);
+                margin-bottom: 2rem;
+                overflow: hidden;
+                transition: box-shadow var(--transition-normal);
             }
             
-            .grid {
-                grid-template-columns: 1fr;
+            .card:hover {
+                box-shadow: var(--shadow-lg);
+            }
+
+            .card-header {
+                padding: 1.5rem;
+                border-bottom: 1px solid var(--border-color-light);
+                background-color: var(--background-alt);
+            }
+
+            .card-header h2 {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: var(--text-primary);
+                margin: 0;
+                display: flex;
+                align-items: center;
+            }
+
+            .card-header h2 i {
+                margin-right: 0.75rem;
+                color: var(--primary-color);
+                font-size: 1.1em;
+            }
+
+            .card-body {
+                padding: 1.5rem;
             }
             
+            .score-container {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                padding: 2.5rem 0 3rem;
+            }
+
             .score-ring {
-                width: 180px;
-                height: 180px;
+                position: relative;
+                width: 220px;
+                height: 220px;
+                filter: drop-shadow(0px 2px 8px rgba(0, 0, 0, 0.06));
             }
-            
+
+            .score-circle {
+                fill: none;
+                stroke-width: 6;
+                stroke-linecap: round;
+                overflow: visible;
+            }
+
+            .score-circle.bg {
+                stroke: var(--background-subtle);
+            }
+
+            .score-circle.progress {
+                stroke: var(--error-color);
+                transition: stroke-dashoffset 1.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+                filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.1));
+            }
+
+            .score-text {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                text-align: center;
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+
             .score-value {
-                font-size: 2.2rem;
+                font-size: 2.4rem;
+                font-weight: 700;
+                color: var(--error-color);
+                line-height: 1;
+                display: block;
             }
-            
+
             .score-label {
                 font-size: 0.9rem;
+                font-weight: 500;
+                margin-top: 0.5rem;
+                color: var(--text-secondary);
+                line-height: 1;
+                display: block;
+            }
+
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: 1.5rem;
+            }
+
+            .stat-card {
+                background: var(--card-background);
+                border-radius: var(--border-radius);
+                padding: 1.25rem;
+                box-shadow: var(--shadow-xs);
+                border: 1px solid var(--border-color-light);
+                display: flex;
+                align-items: center;
+                transition: box-shadow var(--transition-normal);
             }
             
-            .header h1 {
+            .stat-card:hover {
+                box-shadow: var(--shadow-sm);
+            }
+
+            .stat-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background: var(--primary-light);
+                color: var(--primary-color);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 1rem;
+                flex-shrink: 0;
+            }
+            
+            .stat-icon i {
                 font-size: 1.5rem;
             }
             
-            .card-header h2 {
-                font-size: 1.15rem;
+            .stat-icon.warning {
+                background: var(--warning-light);
+                color: var(--warning-color);
             }
-        }
-        
-        .btn, .card, .stat-card, .feature-item, .footer-links a {
-            transition: box-shadow var(--transition-normal), background-color var(--transition-normal), color var(--transition-normal);
-            transform: none !important;
-        }
-        
-        .icon-red {
-            color: #dc2626;
-        }
-        
-        .icon-green {
-            color: #059669;
-        }
-        
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-                scroll-behavior: auto !important;
+            
+            .stat-icon.error {
+                background: var(--error-light);
+                color: var(--error-color);
             }
-        }
-        
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="header-content">
-            <div class="logo">
-                <img src="/static/icon48.png" alt="Truely Logo">
-                <div class="logo-text">Truely</div>
-            </div>
-            <h1>AI-Generated Video Detection Report</h1>
-            <p class="header-subtitle">Comprehensive Analysis Results</p>
-        </div>
-    </div>
-    <div class="container">
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fas fa-chart-pie"></i> Detection Results</h2>
-            </div>
-            <div class="card-body">
-                <div class="score-container">
-                    <div class="score-ring">
-                        <svg viewBox="0 0 100 100">
-                            <circle class="score-circle bg" cx="50" cy="50" r="42" />
-                            <circle class="score-circle progress" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="{{ 263.89 * (100 - fake_score) / 100 }}" />
-                        </svg>
-                        <div class="score-text">
-                            <div class="score-value">{{ fake_score }}%</div>
-                            <div class="score-label">AI-Generated</div>
-                        </div>
-                    </div>
+            
+            .stat-icon.success {
+                background: var(--success-light);
+                color: var(--success-color);
+            }
+
+            .stat-content {
+                flex: 1;
+            }
+
+            .stat-label {
+                font-size: 0.875rem;
+                color: var(--text-secondary);
+                font-weight: 500;
+            }
+
+            .stat-value {
+                font-size: 1.25rem;
+                font-weight: 600;
+                color: var(--text-primary);
+                margin-top: 2px;
+            }
+
+            .video-container {
+                margin: 1.5rem 0;
+                position: relative;
+                padding-top: 56.25%;
+                overflow: hidden;
+                border-radius: var(--border-radius-md);
+                background: #000;
+                box-shadow: var(--shadow-md);
+            }
+
+            .video-container video {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            }
+
+            .explanation {
+                background: var(--error-bg);
+                border-radius: var(--border-radius-md);
+                padding: 1.5rem;
+                margin: 2rem 0;
+                border-left: 4px solid var(--error-color);
+                position: relative;
+            }
+            
+            .explanation::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 80px;
+                height: 80px;
+                background: radial-gradient(circle, rgba(220, 38, 38, 0.05) 0%, rgba(220, 38, 38, 0) 70%);
+                z-index: 0;
+            }
+
+            .explanation h3 {
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: var(--error-color);
+                margin-bottom: 0.75rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .explanation p {
+                color: var(--text-primary);
+                font-size: 0.9375rem;
+                margin: 0.75rem 0;
+                position: relative;
+                z-index: 1;
+            }
+
+            .features {
+                margin: 1.75rem 0;
+            }
+
+            .feature-item {
+                display: flex;
+                align-items: flex-start;
+                margin-bottom: 1.5rem;
+                padding: 0.5rem;
+                border-radius: var(--border-radius);
+                transition: background-color var(--transition-normal);
+            }
+            
+            .feature-item:hover {
+                background-color: var(--background-subtle);
+            }
+
+            .feature-icon {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                width: 32px;
+                height: 32px;
+                border-radius: var(--border-radius-full);
+                background-color: var(--primary-light);
+                color: var(--primary-color);
+                margin-right: 1rem;
+            }
+
+            .feature-content {
+                flex: 1;
+            }
+
+            .feature-title {
+                font-weight: 600;
+                margin-bottom: 0.25rem;
+                color: var(--text-primary);
+            }
+
+            .feature-desc {
+                color: var(--text-secondary);
+                font-size: 0.9375rem;
+                line-height: 1.5;
+            }
+
+            footer {
+                text-align: center;
+                padding: 2.5rem 0;
+                background-color: var(--card-background);
+                margin-top: 3rem;
+                border-top: 1px solid var(--border-color-light);
+                color: var(--text-tertiary);
+                font-size: 0.875rem;
+            }
+
+            .footer-logo {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-bottom: 0.75rem;
+            }
+
+            .footer-logo img {
+                height: 24px;
+                margin-right: 10px;
+            }
+            
+            .footer-logo span {
+                font-weight: 600;
+                font-size: 1.1rem;
+                color: var(--text-secondary);
+            }
+            
+            .footer-tagline {
+                color: var(--text-tertiary);
+                margin-bottom: 1rem;
+            }
+
+            .footer-links {
+                margin: 1rem 0;
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 1.5rem;
+            }
+
+            .footer-links a {
+                color: var(--primary-color);
+                text-decoration: none;
+                font-weight: 500;
+                transition: color var(--transition-normal);
+            }
+
+            .footer-links a:hover {
+                color: var(--primary-dark);
+                text-decoration: underline;
+            }
+            
+            .footer-meta {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 1rem;
+                margin-top: 1rem;
+                color: var(--text-quaternary);
+                font-size: 0.8125rem;
+            }
+            
+            .footer-version {
+                background-color: var(--background-subtle);
+                padding: 2px 6px;
+                border-radius: var(--border-radius-sm);
+                font-family: monospace;
+            }
+            
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 0.5rem;
+                padding: 0.75rem 1.25rem;
+                border-radius: var(--border-radius);
+                font-weight: 600;
+                font-size: 0.9375rem;
+                cursor: pointer;
+                transition: all var(--transition-normal);
+                text-decoration: none;
+                border: none;
+                margin-top: 1.5rem;
+            }
+            
+            .btn-primary {
+                background: linear-gradient(to right, var(--primary-color), var(--primary-dark));
+                color: white;
+                box-shadow: var(--shadow-sm);
+            }
+            
+            .btn-primary:hover {
+                box-shadow: var(--shadow-md);
+            }
+            
+            .btn-outline {
+                background: transparent;
+                color: var(--primary-color);
+                border: 1px solid var(--primary-color);
+            }
+            
+            .btn-outline:hover {
+                background-color: var(--primary-light);
+            }
+            
+            @media (max-width: 768px) {
+                .container {
+                    padding: 0 1rem;
+                }
+                
+                .grid {
+                    grid-template-columns: 1fr;
+                }
+                
+                .score-ring {
+                    width: 180px;
+                    height: 180px;
+                }
+                
+                .score-value {
+                    font-size: 2.2rem;
+                }
+                
+                .score-label {
+                    font-size: 0.9rem;
+                }
+                
+                .header h1 {
+                    font-size: 1.5rem;
+                }
+                
+                .card-header h2 {
+                    font-size: 1.15rem;
+                }
+            }
+            
+            .btn, .card, .stat-card, .feature-item, .footer-links a {
+                transition: box-shadow var(--transition-normal), background-color var(--transition-normal), color var(--transition-normal);
+                transform: none !important;
+            }
+            
+            .icon-red {
+                color: #dc2626;
+            }
+            
+            .icon-green {
+                color: #059669;
+            }
+            
+            @media (prefers-reduced-motion: reduce) {
+                * {
+                    animation-duration: 0.01ms !important;
+                    animation-iteration-count: 1 !important;
+                    transition-duration: 0.01ms !important;
+                    scroll-behavior: auto !important;
+                }
+            }
+            
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="/static/icon48.png" alt="Truely Logo">
+                    <div class="logo-text">Truely</div>
                 </div>
-                <div class="grid">
-                    <div class="stat-card">
-                        <div class="stat-icon error">
-                            <i class="fas fa-robot"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">AI Probability</div>
-                            <div class="stat-value">{{ fake_score }}%</div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon {% if fake_score > 80 %}error{% elif fake_score > 50 %}warning{% else %}success{% endif %}">
-                            <i class="fas fa-face-meh"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Facial Consistency</div>
-                            <div class="stat-value">
-                                {% if fake_score > 80 %}Very Low
-                                {% elif fake_score > 60 %}Low
-                                {% elif fake_score > 40 %}Medium
-                                {% elif fake_score > 20 %}High
-                                {% else %}Very High
-                                {% endif %}
+                <h1>AI-Generated Video Detection Report</h1>
+                <p class="header-subtitle">Comprehensive Analysis Results</p>
+            </div>
+        </div>
+        <div class="container">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-chart-pie"></i> Detection Results</h2>
+                </div>
+                <div class="card-body">
+                    <div class="score-container">
+                        <div class="score-ring">
+                            <svg viewBox="0 0 100 100">
+                                <circle class="score-circle bg" cx="50" cy="50" r="42" />
+                                <circle class="score-circle progress" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="{{ 263.89 * (100 - fake_score) / 100 }}" />
+                            </svg>
+                            <div class="score-text">
+                                <div class="score-value">{{ fake_score }}%</div>
+                                <div class="score-label">AI-Generated</div>
                             </div>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon {% if fake_score > 80 %}error{% elif fake_score > 50 %}warning{% else %}success{% endif %}">
-                            <i class="fas fa-film"></i>
+                    <div class="grid">
+                        <div class="stat-card">
+                            <div class="stat-icon error">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">AI Probability</div>
+                                <div class="stat-value">{{ fake_score }}%</div>
+                            </div>
                         </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Abnormal Frames</div>
-                            <div class="stat-value">
-                                {% if fake_score > 80 %}Very High
-                                {% elif fake_score > 60 %}High
-                                {% elif fake_score > 40 %}Medium
-                                {% elif fake_score > 20 %}Low
-                                {% else %}Very Low
-                                {% endif %}
+                        <div class="stat-card">
+                            <div class="stat-icon {% if fake_score > 80 %}error{% elif fake_score > 50 %}warning{% else %}success{% endif %}">
+                                <i class="fas fa-face-meh"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Facial Consistency</div>
+                                <div class="stat-value">
+                                    {% if fake_score > 80 %}Very Low
+                                    {% elif fake_score > 60 %}Low
+                                    {% elif fake_score > 40 %}Medium
+                                    {% elif fake_score > 20 %}High
+                                    {% else %}Very High
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon {% if fake_score > 80 %}error{% elif fake_score > 50 %}warning{% else %}success{% endif %}">
+                                <i class="fas fa-film"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Abnormal Frames</div>
+                                <div class="stat-value">
+                                    {% if fake_score > 80 %}Very High
+                                    {% elif fake_score > 60 %}High
+                                    {% elif fake_score > 40 %}Medium
+                                    {% elif fake_score > 20 %}Low
+                                    {% else %}Very Low
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="explanation">
+                        <h3><i class="fas fa-exclamation-triangle"></i> AI Detection Alert</h3>
+                        <p>
+                            This video shows signs of AI manipulation based on our analysis of facial consistency between frames.
+                            {% if fake_score > 80 %}
+                            The very high detection score indicates significant inconsistencies that are hallmarks of synthetic media.
+                            {% elif fake_score > 60 %}
+                            The high detection score indicates notable inconsistencies that are common in AI-generated content.
+                            {% elif fake_score > 40 %}
+                            The moderate detection score indicates some inconsistencies that may suggest partial AI modification.
+                            {% else %}
+                            While the detection score is relatively low, some minor inconsistencies were still detected.
+                            {% endif %}
+                        </p>
+                        <p>
+                            Red bounding boxes in the video highlight frames where facial inconsistencies were detected.
+                        </p>
+                    </div>
+                    <a href="#" class="btn btn-outline" onclick="window.print()">
+                        <i class="fas fa-download"></i>
+                        Download Report
+                    </a>
+                </div>
+            </div>
+            <div class="card" id="video-section">
+                <div class="card-header">
+                    <h2><i class="fas fa-video"></i> Analyzed Video</h2>
+                </div>
+                <div class="card-body">
+                    <div class="video-container">
+                        <video controls>
+                            <source src="{{ video_url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    <div class="features">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-square icon-red"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Red Bounding Boxes</div>
+                                <div class="feature-desc">Indicate frames where facial inconsistencies were detected, suggesting AI manipulation.</div>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-square icon-green"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Green Bounding Boxes</div>
+                                <div class="feature-desc">Indicate frames where facial features appear consistent, suggesting authentic content.</div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="explanation">
-                    <h3><i class="fas fa-exclamation-triangle"></i> AI Detection Alert</h3>
-                    <p>
-                        This video shows signs of AI manipulation based on our analysis of facial consistency between frames.
-                        {% if fake_score > 80 %}
-                        The very high detection score indicates significant inconsistencies that are hallmarks of synthetic media.
-                        {% elif fake_score > 60 %}
-                        The high detection score indicates notable inconsistencies that are common in AI-generated content.
-                        {% elif fake_score > 40 %}
-                        The moderate detection score indicates some inconsistencies that may suggest partial AI modification.
-                        {% else %}
-                        While the detection score is relatively low, some minor inconsistencies were still detected.
-                        {% endif %}
-                    </p>
-                    <p>
-                        Red bounding boxes in the video highlight frames where facial inconsistencies were detected.
-                    </p>
-                </div>
-                <a href="#" class="btn btn-outline" onclick="window.print()">
-                    <i class="fas fa-download"></i>
-                    Download Report
-                </a>
             </div>
-        </div>
-        <div class="card" id="video-section">
-            <div class="card-header">
-                <h2><i class="fas fa-video"></i> Analyzed Video</h2>
-            </div>
-            <div class="card-body">
-                <div class="video-container">
-                    <video controls>
-                        <source src="{{ video_url }}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-info-circle"></i> How Detection Works</h2>
                 </div>
-                <div class="features">
-                    <div class="feature-item">
-                        <div class="feature-icon">
-                            <i class="fas fa-square icon-red"></i>
+                <div class="card-body">
+                    <div class="features">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-1"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Face Detection</div>
+                                <div class="feature-desc">Our system first identifies faces in each video frame using advanced face detection algorithms.</div>
+                            </div>
                         </div>
-                        <div class="feature-content">
-                            <div class="feature-title">Red Bounding Boxes</div>
-                            <div class="feature-desc">Indicate frames where facial inconsistencies were detected, suggesting AI manipulation.</div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-2"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Feature Encoding</div>
+                                <div class="feature-desc">Facial features are encoded using a neural network to create a unique "fingerprint" for each frame.</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">
-                            <i class="fas fa-square icon-green"></i>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-3"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Consistency Analysis</div>
+                                <div class="feature-desc">Consecutive frames are compared to detect unnatural changes in facial features that exceed normal movement thresholds.</div>
+                            </div>
                         </div>
-                        <div class="feature-content">
-                            <div class="feature-title">Green Bounding Boxes</div>
-                            <div class="feature-desc">Indicate frames where facial features appear consistent, suggesting authentic content.</div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-4"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Anomaly Flagging</div>
+                                <div class="feature-desc">Frames with suspicious inconsistencies are flagged, and multiple flags contribute to the overall AI-generated confidence score.</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fas fa-info-circle"></i> How Detection Works</h2>
-            </div>
-            <div class="card-body">
-                <div class="features">
-                    <div class="feature-item">
-                        <div class="feature-icon">
-                            <i class="fas fa-1"></i>
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-shield-alt"></i> Media Literacy Tips</h2>
+                </div>
+                <div class="card-body">
+                    <div class="features">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-check"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Verify Before Sharing</div>
+                                <div class="feature-desc">Always check the source and authenticity of videos before sharing them on social media.</div>
+                            </div>
                         </div>
-                        <div class="feature-content">
-                            <div class="feature-title">Face Detection</div>
-                            <div class="feature-desc">Our system first identifies faces in each video frame using advanced face detection algorithms.</div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-search"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Look for Visual Clues</div>
+                                <div class="feature-desc">Watch for unnatural facial movements, strange lighting, or inconsistent blinking patterns.</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">
-                            <i class="fas fa-2"></i>
-                        </div>
-                        <div class="feature-content">
-                            <div class="feature-title">Feature Encoding</div>
-                            <div class="feature-desc">Facial features are encoded using a neural network to create a unique "fingerprint" for each frame.</div>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">
-                            <i class="fas fa-3"></i>
-                        </div>
-                        <div class="feature-content">
-                            <div class="feature-title">Consistency Analysis</div>
-                            <div class="feature-desc">Consecutive frames are compared to detect unnatural changes in facial features that exceed normal movement thresholds.</div>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">
-                            <i class="fas fa-4"></i>
-                        </div>
-                        <div class="feature-content">
-                            <div class="feature-title">Anomaly Flagging</div>
-                            <div class="feature-desc">Frames with suspicious inconsistencies are flagged, and multiple flags contribute to the overall AI-generated confidence score.</div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-newspaper"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Cross-Reference</div>
+                                <div class="feature-desc">Check if the video has been reported by credible news sources or fact-checking organizations.</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fas fa-shield-alt"></i> Media Literacy Tips</h2>
+        <footer>
+            <div class="footer-logo">
+                <img src="/static/icon16.png" alt="Truely Icon">
+                <span>Truely</span>
             </div>
-            <div class="card-body">
-                <div class="features">
-                    <div class="feature-item">
-                        <div class="feature-icon">
-                            <i class="fas fa-check"></i>
-                        </div>
-                        <div class="feature-content">
-                            <div class="feature-title">Verify Before Sharing</div>
-                            <div class="feature-desc">Always check the source and authenticity of videos before sharing them on social media.</div>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">
-                            <i class="fas fa-search"></i>
-                        </div>
-                        <div class="feature-content">
-                            <div class="feature-title">Look for Visual Clues</div>
-                            <div class="feature-desc">Watch for unnatural facial movements, strange lighting, or inconsistent blinking patterns.</div>
-                        </div>
-                    </div>
-                    <div class="feature-item">
-                        <div class="feature-icon">
-                            <i class="fas fa-newspaper"></i>
-                        </div>
-                        <div class="feature-content">
-                            <div class="feature-title">Cross-Reference</div>
-                            <div class="feature-desc">Check if the video has been reported by credible news sources or fact-checking organizations.</div>
-                        </div>
-                    </div>
-                </div>
+            <p class="footer-tagline">Promoting Media Literacy in the AI Era</p>
+            <div class="footer-links">
+                <a href="https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool" target="_blank" rel="noopener">GitHub</a>
+                <a href="https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool/blob/main/README.md" target="_blank" rel="noopener">About</a>
+                <a href="#" target="_blank" rel="noopener">Help Center</a>
+                <a href="#" target="_blank" rel="noopener">Privacy</a>
             </div>
-        </div>
-    </div>
-    <footer>
-        <div class="footer-logo">
-            <img src="/static/icon16.png" alt="Truely Icon">
-            <span>Truely</span>
-        </div>
-        <p class="footer-tagline">Promoting Media Literacy in the AI Era</p>
-        <div class="footer-links">
-            <a href="https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool" target="_blank" rel="noopener">GitHub</a>
-            <a href="https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool/blob/main/README.md" target="_blank" rel="noopener">About</a>
-            <a href="#" target="_blank" rel="noopener">Help Center</a>
-            <a href="#" target="_blank" rel="noopener">Privacy</a>
-        </div>
-        <div class="footer-meta">
-            <span>© 2025 Truely</span>
-            <span class="footer-version">v1.0.0</span>
-        </div>
-    </footer>
-</body>
+            <div class="footer-meta">
+                <span>© 2025 Truely</span>
+                <span class="footer-version">v1.0.0</span>
+            </div>
+        </footer>
+    </body>
 </html>

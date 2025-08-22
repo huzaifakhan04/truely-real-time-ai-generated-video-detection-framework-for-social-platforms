@@ -1,179 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="popup.css">
-  <link rel="stylesheet" href="auth.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    .user-profile {
-      display: flex;
-      align-items: center;
-      margin-left: auto;
-      position: relative;
-      cursor: pointer;
-    }
-    
-    .user-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background-color: #6366F1;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 14px;
-    }
-    
-    .user-tooltip {
-      position: absolute;
-      top: 100%;
-      right: 0;
-      background-color: #333;
-      color: white;
-      padding: 5px 10px;
-      border-radius: 4px;
-      font-size: 12px;
-      white-space: nowrap;
-      opacity: 0;
-      transform: translateY(-5px);
-      transition: opacity 0.2s, transform 0.2s;
-      pointer-events: none;
-      z-index: 10;
-    }
-    
-    .user-tooltip.visible {
-      opacity: 1;
-      transform: translateY(5px);
-    }
-  </style>
-  <title>Truely - Sign In</title>
-</head>
-<body>
-  <div class="container">
-    <header>
-      <img src="icons/icon48.png" alt="Truely logo" class="header-icon">
-      <div class="header-branding">
-        <h1>Truely</h1>
-        <span class="header-tagline">AI-Generated Video Detector</span>
-      </div>
-    </header>
-    
-    <!-- Login Form -->
-    <div id="login-form" class="auth-form state-transition">
-      <div class="message info">
-        <div class="message-icon">
-          <i class="fas fa-shield-alt"></i>
-        </div>
-        <div class="message-content">
-          <p>Sign in to access AI-generated video detection tools.</p>
-        </div>
-      </div>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="popup.css">
+        <link rel="stylesheet" href="auth.css">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
 
-      <div id="login-error" class="error-message hidden"></div>
-      
-      <form id="login-form-element">
-        <div class="form-group">
-          <label for="login-email">Email</label>
-          <div class="input-with-icon">
-            <i class="fas fa-envelope input-icon"></i>
-            <input type="email" id="login-email" name="email" placeholder="Enter your email" required>
-          </div>
-        </div>
-        
-        <div class="form-group">
-          <label for="login-password">Password</label>
-          <div class="input-with-icon">
-            <i class="fas fa-lock input-icon"></i>
-            <input type="password" id="login-password" name="password" placeholder="Enter your password" required>
-          </div>
-        </div>
-        
-        <button type="submit" id="login-button" class="btn primary-btn">
-          <span>Sign In</span>
-          <i class="fas fa-sign-in-alt btn-icon"></i>
-        </button>
-      </form>
-      
-      <div class="auth-footer">
-        <p>Don't have an account? <a href="#" id="show-register">Register</a></p>
-      </div>
-    </div>
-    
-    <!-- Register Form -->
-    <div id="register-form" class="auth-form hidden state-transition">
-      <div class="message info">
-        <div class="message-icon">
-          <i class="fas fa-user-plus"></i>
-        </div>
-        <div class="message-content">
-          <p>Create an account to get started with Truely.</p>
-        </div>
-      </div>
+            .user-profile {
+                display: flex;
+                align-items: center;
+                margin-left: auto;
+                position: relative;
+                cursor: pointer;
+            }
+            
+            .user-avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background-color: #6366F1;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            
+            .user-tooltip {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background-color: #333;
+                color: white;
+                padding: 5px 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                white-space: nowrap;
+                opacity: 0;
+                transform: translateY(-5px);
+                transition: opacity 0.2s, transform 0.2s;
+                pointer-events: none;
+                z-index: 10;
+            }
+            
+            .user-tooltip.visible {
+                opacity: 1;
+                transform: translateY(5px);
+            }
 
-      <div id="register-error" class="error-message hidden"></div>
-      
-      <form id="register-form-element">
-        <div class="form-group">
-          <label for="register-email">Email</label>
-          <div class="input-with-icon">
-            <i class="fas fa-envelope input-icon"></i>
-            <input type="email" id="register-email" name="email" placeholder="Enter your email" required>
-          </div>
+        </style>
+        <title>Truely - Sign In</title>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <img src="icons/icon48.png" alt="Truely logo" class="header-icon">
+                <div class="header-branding">
+                    <h1>Truely</h1>
+                    <span class="header-tagline">AI-Generated Video Detector</span>
+                </div>
+            </header>
+            <div id="login-form" class="auth-form state-transition">
+                <div class="message info">
+                    <div class="message-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <div class="message-content">
+                        <p>Sign in to access AI-generated video detection tools.</p>
+                    </div>
+                </div>
+                <div id="login-error" class="error-message hidden"></div>
+                <form id="login-form-element">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" id="login-email" name="email" placeholder="Enter your email" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="login-password" name="password" placeholder="Enter your password" required>
+                        </div>
+                    </div>
+                    <button type="submit" id="login-button" class="btn primary-btn">
+                        <span>Sign In</span>
+                        <i class="fas fa-sign-in-alt btn-icon"></i>
+                    </button>
+                </form>
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="#" id="show-register">Register</a></p>
+                </div>
+            </div>
+            <div id="register-form" class="auth-form hidden state-transition">
+                <div class="message info">
+                    <div class="message-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <div class="message-content">
+                        <p>Create an account to get started with Truely.</p>
+                    </div>
+                </div>
+                <div id="register-error" class="error-message hidden"></div>
+                <form id="register-form-element">
+                    <div class="form-group">
+                        <label for="register-email">Email</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-envelope input-icon"></i>
+                            <input type="email" id="register-email" name="email" placeholder="Enter your email" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="register-password" name="password" placeholder="Choose a password" required minlength="6">
+                        </div>
+                        <small class="form-text">Password must be at least 6 characters</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="register-confirm">Confirm Password</label>
+                        <div class="input-with-icon">
+                            <i class="fas fa-lock input-icon"></i>
+                            <input type="password" id="register-confirm" name="confirm" placeholder="Confirm your password" required>
+                        </div>
+                    </div>
+                    <button type="submit" id="register-button" class="btn primary-btn">
+                        <span>Register</span>
+                        <i class="fas fa-user-plus btn-icon"></i>
+                    </button>
+                </form>
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="#" id="show-login">Sign In</a></p>
+                </div>
+            </div>
+            <footer>
+                <div class="footer-logo">
+                    <img src="icons/icon16.png" alt="Truely icon">
+                    <span>Truely</span>
+                </div>
+                <div class="footer-tagline">Promoting Media Literacy in the AI Era</div>
+                <div class="footer-links">
+                    <a href="https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool" class="footer-link focus-visible" target="_blank" rel="noopener">GitHub</a>
+                    <a href="#" class="footer-link focus-visible" id="about-link">About</a>
+                    <a href="#" class="footer-link focus-visible" id="privacy-link">Privacy</a>
+                </div>
+                <div class="footer-meta">
+                    <span>© 2025 Truely</span>
+                    <span class="footer-version">v1.0.0</span>
+                </div>
+            </footer>
         </div>
-        
-        <div class="form-group">
-          <label for="register-password">Password</label>
-          <div class="input-with-icon">
-            <i class="fas fa-lock input-icon"></i>
-            <input type="password" id="register-password" name="password" placeholder="Choose a password" required minlength="6">
-          </div>
-          <small class="form-text">Password must be at least 6 characters</small>
-        </div>
-        
-        <div class="form-group">
-          <label for="register-confirm">Confirm Password</label>
-          <div class="input-with-icon">
-            <i class="fas fa-lock input-icon"></i>
-            <input type="password" id="register-confirm" name="confirm" placeholder="Confirm your password" required>
-          </div>
-        </div>
-        
-        <button type="submit" id="register-button" class="btn primary-btn">
-          <span>Register</span>
-          <i class="fas fa-user-plus btn-icon"></i>
-        </button>
-      </form>
-      
-      <div class="auth-footer">
-        <p>Already have an account? <a href="#" id="show-login">Sign In</a></p>
-      </div>
-    </div>
-
-    <footer>
-      <div class="footer-logo">
-        <img src="icons/icon16.png" alt="Truely icon">
-        <span>Truely</span>
-      </div>
-      <div class="footer-tagline">Promoting Media Literacy in the AI Era</div>
-      <div class="footer-links">
-        <a href="https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool" class="footer-link focus-visible" target="_blank" rel="noopener">GitHub</a>
-        <a href="#" class="footer-link focus-visible" id="about-link">About</a>
-        <a href="#" class="footer-link focus-visible" id="privacy-link">Privacy</a>
-      </div>
-      <div class="footer-meta">
-        <span>© 2025 Truely</span>
-        <span class="footer-version">v1.0.0</span>
-      </div>
-    </footer>
-  </div>
-
-  <!-- Load local Supabase implementation -->
-  <script src="supabase-js-bundle.js"></script>
-  <script src="auth.js"></script>
-</body>
+        <script src="supabase-js-bundle.js"></script>
+        <script src="auth.js"></script>
+    </body>
 </html>
