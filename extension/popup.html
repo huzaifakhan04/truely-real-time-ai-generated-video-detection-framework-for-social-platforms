@@ -12,12 +12,12 @@
       <h1>AI-Generated Video Detector</h1>
     </header>
     <div id="not-youtube" class="hidden message error">
-      <p>This extension only works on YouTube videos.</p>
-      <p>Please navigate to a YouTube video and try again.</p>
+      <p id="unsupported-message">This extension only works on video pages.</p>
+      <p>Please navigate to a YouTube, Facebook, Twitter, or Reddit video page and try again.</p>
     </div>
     <div id="youtube-content" class="hidden">
       <div id="initial-state">
-        <p>Click the button below to analyze this YouTube video for AI-generated content.</p>
+        <p>Click the button below to analyze this <span id="platform-name">video</span> for AI-generated content.</p>
         <button id="analyze-btn" class="primary-btn">Analyze Video</button>
       </div>
       <div id="loading-state" class="hidden">
