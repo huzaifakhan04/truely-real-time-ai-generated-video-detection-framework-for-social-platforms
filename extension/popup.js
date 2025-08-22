@@ -298,32 +298,14 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   }
 
-  // Function to initialize donut charts
+  // Function to initialize donut charts (for view_result.html)
   function initDonutCharts() {
-    // Set up SVG parameters with the radius matching our CSS
-    const radius = 14;
-    const circumference = 2 * Math.PI * radius;
-    
-    // Initialize both charts at 0%
-    realProgress.style.strokeDasharray = `${circumference} ${circumference}`;
-    realProgress.style.strokeDashoffset = circumference;
-    
-    fakeProgress.style.strokeDasharray = `${circumference} ${circumference}`;
-    fakeProgress.style.strokeDashoffset = circumference;
+    // No action needed - we've replaced the donut charts with simple text displays in popup.html
   }
 
-  // Function to update donut chart with percentage
+  // Function to update donut chart with percentage (for view_result.html)
   function updateDonutChart(circleElement, percentage) {
-    // Use a smaller radius to match our updated CSS
-    const radius = 14;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (percentage / 100) * circumference;
-    
-    // Animate the chart fill
-    setTimeout(() => {
-      circleElement.style.strokeDasharray = `${circumference} ${circumference}`;
-      circleElement.style.strokeDashoffset = offset;
-    }, 100);
+    // No action needed - we've replaced the donut charts with simple text displays in popup.html
   }
 
   // Function to clean URL for display

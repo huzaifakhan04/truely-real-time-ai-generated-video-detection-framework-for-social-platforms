@@ -97,9 +97,7 @@ header {
   transition: transform var(--transition-normal) ease;
 }
 
-header:hover .header-icon {
-  transform: scale(1.05);
-}
+/* Removing hover scale animation */
 
 .header-branding {
   display: flex;
@@ -289,12 +287,11 @@ h3 {
 }
 
 .primary-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
 }
 
 .primary-btn:hover::before {
-  opacity: 1;
+  opacity: 0.8;
 }
 
 .primary-btn:focus-visible {
@@ -325,11 +322,7 @@ h3 {
 }
 
 .secondary-btn:hover {
-  background-color: var(--primary-light);
-  border-color: var(--primary-color);
-  color: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-sm);
+  background-color: var(--background-subtle);
 }
 
 .secondary-btn:active {
@@ -612,7 +605,54 @@ h3 {
   color: var(--error-color);
 }
 
-/* Donut chart styles */
+/* Score display styles */
+.score-display {
+  margin: 30px auto;
+  text-align: center;
+  animation: fadeIn 0.8s forwards;
+  animation-delay: 0.3s;
+  opacity: 0;
+  padding: 10px;
+  border-radius: var(--border-radius);
+}
+
+.score-display.real {
+  background-color: var(--success-bg);
+}
+
+.score-display.fake {
+  background-color: var(--error-bg);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.score-display .percentage {
+  font-size: 40px;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.score-display.real .percentage {
+  color: var(--success-color);
+}
+
+.score-display.fake .percentage {
+  color: var(--error-color);
+}
+
+.score-display .label {
+  font-size: 14px;
+  font-weight: 500;
+  margin: 5px 0 0;
+  color: var(--text-secondary);
+}
+
+/* Donut chart styles - kept for view_result.html */
 .donut-chart {
   width: 120px;
   height: 120px;
@@ -622,85 +662,7 @@ h3 {
   animation: fadeIn 0.8s forwards;
   animation-delay: 0.3s;
   opacity: 0;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.donut-chart svg {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-  overflow: visible;
-}
-
-.donut-chart circle {
-  fill: none;
-  stroke-width: 5;
-  stroke-linecap: round;
-}
-
-.donut-chart .background {
-  stroke: var(--background-subtle);
-  opacity: 0.8;
-}
-
-.donut-chart .progress {
-  transition: stroke-dashoffset 1.5s cubic-bezier(0.165, 0.84, 0.44, 1);
-  filter: drop-shadow(0px 1px 3px rgba(0, 0, 0, 0.1));
-}
-
-.donut-chart.real .progress {
-  stroke: var(--success-color);
-}
-
-.donut-chart.fake .progress {
-  stroke: var(--error-color);
-}
-
-.donut-chart .text {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  text-align: center;
-  animation: scaleIn 0.5s forwards;
-  animation-delay: 1s;
-  opacity: 0;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.8);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-}
-
-.donut-chart .percentage {
-  font-size: 22px;
-  font-weight: 700;
-  margin: 0;
-  line-height: 1;
-  display: block;
-}
-
-.donut-chart.real .percentage {
-  color: var(--success-color);
-}
-
-.donut-chart.fake .percentage {
-  color: var(--error-color);
+  display: none; /* Hidden in popup */
 }
 
 .donut-chart .label {

@@ -113,15 +113,9 @@
           </div>
           <h2>Authentic Video Detected</h2>
           
-          <div class="donut-chart real" role="img" aria-label="Authenticity score">
-            <svg viewBox="0 0 36 36">
-              <circle class="background" cx="18" cy="18" r="14" stroke-dasharray="100 0" stroke-dashoffset="0"></circle>
-              <circle class="progress" id="real-progress" cx="18" cy="18" r="14" stroke-dasharray="100 0" stroke-dashoffset="0"></circle>
-            </svg>
-            <div class="text">
-              <p class="percentage" id="real-score">100%</p>
-              <p class="label">Authentic</p>
-            </div>
+          <div class="score-display real" role="img" aria-label="Authenticity score">
+            <p class="percentage" id="real-score">100%</p>
+            <p class="label">Authentic</p>
           </div>
           
           <p>This video appears to be authentic with no significant signs of AI manipulation.</p>
@@ -151,15 +145,9 @@
           </div>
           <h2>AI-Generated Content Detected</h2>
           
-          <div class="donut-chart fake" role="img" aria-label="AI detection score">
-            <svg viewBox="0 0 36 36">
-              <circle class="background" cx="18" cy="18" r="14" stroke-dasharray="100 0" stroke-dashoffset="0"></circle>
-              <circle class="progress" id="fake-progress" cx="18" cy="18" r="14" stroke-dasharray="100 0" stroke-dashoffset="0"></circle>
-            </svg>
-            <div class="text">
-              <p class="percentage" id="fake-score">95%</p>
-              <p class="label">AI-Generated</p>
-            </div>
+          <div class="score-display fake" role="img" aria-label="AI detection score">
+            <p class="percentage" id="fake-score">95%</p>
+            <p class="label">AI-Generated</p>
           </div>
           
           <p id="fake-explanation">This video shows signs of facial inconsistency between frames, which is a common indicator of AI-generated or deepfake content.</p>
