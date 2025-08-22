@@ -1,6 +1,6 @@
-# AI-Generated Video Detection Tool:
+# Truely - AI-Generated Video Detector:
 
-An advanced tool that analyzes videos to detect AI-generated or manipulated content by tracking facial consistency between frames.
+An advanced browser extension and API that analyzes videos to detect AI-generated or manipulated content by tracking facial consistency between frames.
 
 ## Overview
 
@@ -8,11 +8,12 @@ This application uses computer vision and facial recognition to identify inconsi
 
 ## Features
 
-- **Video Analysis**: Upload and process videos in multiple formats (MP4, AVI, MOV, MKV).
+- **Browser Integration**: Chrome extension that works directly with YouTube, Facebook, Twitter/X, and Reddit videos.
+- **Video Analysis**: Process videos from popular platforms or local uploads.
 - **Facial Consistency Detection**: Tracks changes in facial features between frames.
 - **Real-time Visualization**: Highlights suspicious frames with red bounding boxes.
 - **Confidence Score**: Provides a percentage indicating likelihood of AI manipulation.
-- **User-friendly Interface**: Built with Streamlit for easy interaction.
+- **Detailed Reports**: View comprehensive analysis with visual indicators and metrics.
 
 ## How It Works
 
@@ -28,6 +29,7 @@ This application uses computer vision and facial recognition to identify inconsi
 
 - Python 3.8+
 - pip package manager
+- Google Chrome browser (for extension)
 
 ### Setup
 
@@ -46,25 +48,9 @@ This application uses computer vision and facial recognition to identify inconsi
    - Ensure the `models/shape_predictor_68_face_landmarks.dat` file is present in the project directory.
    - If missing, download from [dlib's model repository](http://dlib.net/files/shape_predictor_68_face_landmarks.dat.bz2).
 
-## Usage
-
-1. Run the application:
-   ```bash
-   streamlit run app.py
-   ```
-
-2. Access the web interface (typically at http://localhost:8501).
-
-3. Upload a video file for analysis.
-
-4. Review the detection results:
-   - Green boxes indicate consistent facial features (likely real).
-   - Red boxes highlight inconsistent facial features (possibly AI-generated).
-   - Check the confidence score for overall assessment.
-
 ## Chrome Extension
 
-The project includes a Chrome extension for quick video analysis directly from your browser.
+The primary interface for this tool is a Chrome extension for quick video analysis directly from your browser.
 
 ### Installing the Extension
 
@@ -82,7 +68,7 @@ The extension requires a local server to process videos:
    cd extension/server
    ```
 
-2. Install server-specific dependencies:
+2. Install server-specific dependencies if needed:
    ```bash
    pip install -r requirements.txt
    ```
@@ -95,10 +81,19 @@ The extension requires a local server to process videos:
 ### Using the Extension
 
 1. Click the extension icon in your browser toolbar.
-2. Select a video to analyze (supports YouTube, Twitter, Facebook, and Reddit).
+2. Navigate to a video page on YouTube, Twitter/X, Facebook, or Reddit.
 3. Click "Analyze Video".
 4. View the analysis results directly in the extension popup.
-5. For detailed analysis, you can view the full report in a new tab.
+5. For detailed analysis, click "View Detailed Analysis" to see the full report.
+
+## Backend API
+
+The backend is built with FastAPI and provides the following endpoints:
+
+- `/download`: Downloads videos from supported platforms.
+- `/analyze`: Processes videos to detect AI manipulation.
+- `/view/{result_id}`: Shows detailed analysis results.
+- `/video/{result_id}`: Serves processed videos with detection highlights.
 
 ## Technical Implementation
 
@@ -106,7 +101,8 @@ The detection system uses:
 - **OpenCV**: For video processing and frame manipulation.
 - **FaceNet PyTorch**: For facial feature extraction and encoding.
 - **MTCNN**: For accurate face detection in video frames.
-- **Streamlit**: For the user interface.
+- **FastAPI**: For the backend server.
+- **Chrome Extension APIs**: For browser integration.
 
 ## Limitations
 
@@ -114,3 +110,4 @@ The detection system uses:
 - May produce false positives with rapidly changing lighting conditions.
 - Performance depends on video resolution and quality.
 - Processing time increases with video length.
+- Requires local server setup.
