@@ -17,14 +17,8 @@ document.addEventListener("DOMContentLoaded", function() {
       return;
     }
     
-    // Session is valid, load user profile info if we have a profile.js script
-    try {
-      if (typeof loadUserProfile === 'function') {
-        loadUserProfile(result.session.user);
-      }
-    } catch(e) {
-      console.log('Profile module not loaded or function not available');
-    }
+    // User profile display has been removed as requested
+    // No user icon or dropdown will be displayed
     
     // If authenticated, continue with the normal popup flow
     initializePopup();
