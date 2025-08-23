@@ -214,7 +214,7 @@ document.addEventListener("DOMContentLoaded", function() {
       const displayUrl = cleanUrlForDisplay(url);
       urlInfoDiv.innerHTML = `
         <p><strong>Platform:</strong> <span class="platform-badge"><i class="${getPlatformIcon(platform)}"></i> ${platform}</span></p>
-        <p><strong>URL:</strong> ${displayUrl}</p>
+        <p>${displayUrl}</p>
       `;
       const urlInfoContainer = document.getElementById("url-info-container");
       urlInfoContainer.innerHTML = "";

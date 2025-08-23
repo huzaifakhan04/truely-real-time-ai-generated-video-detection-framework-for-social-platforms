@@ -294,8 +294,10 @@ h3 {
 .primary-btn img,
 .primary-btn i {
   position: relative;
-  top: 2px;
   vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .secondary-btn {
@@ -345,6 +347,17 @@ h3 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.btn i,
+.btn svg,
+.btn img {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
 }
 
 .btn.loading {
@@ -717,6 +730,9 @@ h3 {
 .feature-icon {
   color: var(--primary-color);
   font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .feature-content {
@@ -981,6 +997,8 @@ footer {
   color: var(--text-tertiary);
   font-size: 14px;
   width: 16px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .report-detail-value {
