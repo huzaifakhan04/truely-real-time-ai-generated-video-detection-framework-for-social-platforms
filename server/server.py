@@ -8,13 +8,19 @@ import cv2
 import re
 import json
 import uvicorn
+import sys
 from pydantic import BaseModel
-from typing import Optional
+from typing import (
+    Optional,
+    Dict,
+    Any
+)
 from model import run
 from fastapi import (
     FastAPI,
     Request,
-    HTTPException
+    HTTPException,
+    BackgroundTasks
 )
 from fastapi.responses import (
     JSONResponse,
@@ -25,8 +31,30 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
+news_router = None
+extract_audio = None
+transcribe_audio = None
+perform_search = None
+judge_content = None
+try:
+    from web.routes import router as news_router
+    from web.utils.audio import extract_audio
+    from web.utils.transcribe import transcribe_audio
+    from web.utils.search import perform_search
+    from web.utils.judge import judge_content
+    has_news_features = True
+except ImportError as e:
+    has_news_features = False
+    print(f"News verification features unavailable: {e}")
 app = FastAPI()
-app.mount("/static", StaticFiles(directory=os.path.join(os.path.dirname(__file__), "static")), name="static")
+static_dir = os.path.join(os.path.dirname(__file__), "static")
+if os.path.exists(static_dir):
+    app.mount("/static", StaticFiles(directory=static_dir), name="static")
+else:
+    raise FileNotFoundError(f"Static directory not found: {static_dir}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -34,23 +62,38 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
-analysis_results = {}
+if news_router and has_news_features:
+    try:
+        app.include_router(news_router, prefix="/news", tags=["news"])
+    except Exception as e:
+        print(f"Failed to include news router: {e}")
+templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+if os.path.exists(templates_dir):
+    templates = Jinja2Templates(directory=templates_dir)
+else:
+    raise FileNotFoundError(f"Templates directory not found: {templates_dir}")
+analysis_results: Dict[str, Dict[str, Any]] = {}
 
 def cleanup_old_results():
     while True:
         current_time = time.time()
         to_remove = []
         for result_id, result in analysis_results.items():
-            if current_time - result["timestamp"] > 3600:
+            if current_time - result.get("timestamp", 0) > 3600:
                 try:
-                    os.unlink(result["output_path"])
-                except:
-                    pass
+                    output_path = result.get("output_path")
+                    if output_path and os.path.exists(output_path):
+                        os.unlink(output_path)
+                    audio_path = result.get("audio_path")
+                    if audio_path and os.path.exists(audio_path):
+                        os.unlink(audio_path)
+                except Exception as e:
+                    print(f"Failed to cleanup files for result {result_id}: {e}")
                 to_remove.append(result_id)
         for result_id in to_remove:
             del analysis_results[result_id]
+            if to_remove:
+                print(f"Cleaned up result: {result_id}")
         time.sleep(300)
 
 cleanup_thread = threading.Thread(target=cleanup_old_results, daemon=True)
@@ -60,23 +103,25 @@ cleanup_thread.start()
 async def view_result(result_id: str, request: Request):
     if result_id not in analysis_results:
         raise HTTPException(status_code=404, detail="Result not found or has expired")
-    return templates.TemplateResponse(
-        "view_result.html", 
-        {
-            "request": request,
-            "fake_score": analysis_results[result_id]["fake_score"],
-            "video_url": f"/video/{result_id}"
-        }
-    )
+    template_data = {
+        "request": request,
+        "fake_score": analysis_results[result_id]["fake_score"],
+        "video_url": f"/video/{result_id}"
+    }
+    if "news_score" in analysis_results[result_id]:
+        template_data["news_score"] = analysis_results[result_id]["news_score"]
+        template_data["news_summary"] = analysis_results[result_id]["news_summary"]
+        template_data["news_evidence"] = analysis_results[result_id]["news_evidence"]
+    return templates.TemplateResponse("view_result.html", template_data)
 
 @app.get("/video/{result_id}")
 async def get_video(result_id: str):
     if result_id not in analysis_results:
         raise HTTPException(status_code=404, detail="Video not found or has expired")
-    return FileResponse(
-        analysis_results[result_id]["output_path"], 
-        media_type="video/mp4"
-    )
+    output_path = analysis_results[result_id]["output_path"]
+    if not os.path.exists(output_path):
+        raise HTTPException(status_code=404, detail="Video file not found")
+    return FileResponse(output_path, media_type="video/mp4")
 
 def get_platform_and_video_id(url):
     youtube_patterns = [
@@ -242,7 +287,7 @@ class VideoAnalysisRequest(BaseModel):
     videoPath: str
 
 @app.post("/analyze")
-async def analyze_video(data: VideoAnalysisRequest):
+async def analyze_video(data: VideoAnalysisRequest, background_tasks: BackgroundTasks):
     video_path = data.videoPath
     if not video_path or not os.path.exists(video_path):
         return JSONResponse(
@@ -264,23 +309,107 @@ async def analyze_video(data: VideoAnalysisRequest):
             "timestamp": time.time()
         }
         def delete_input_video():
-            time.sleep(60)
             try:
-                os.unlink(video_path)
-            except:
-                pass
-        delete_thread = threading.Thread(target=delete_input_video)
-        delete_thread.start()
+                if os.path.exists(video_path):
+                    os.unlink(video_path)
+            except Exception as e:
+                print(f"Failed to delete input video: {str(e)}")
+        background_tasks.add_task(delete_input_video)
         return {
             "fakeScore": fake_score,
             "resultId": result_id
         }
     except Exception as e:
-        print(f"Analysis error: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={"error": f"Failed to analyze video: {str(e)}"}
         )
+
+class CombinedAnalysisRequest(BaseModel):
+    videoPath: str
+
+@app.post("/analyze-combined")
+async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: BackgroundTasks):
+    video_path = data.videoPath
+    if not video_path or not os.path.exists(video_path):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Invalid video path"}
+        )
+    try:
+        output_path = video_path.replace(".mp4", "_output.mp4")
+        fake_score = run(video_path, output_path)
+        if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+            return JSONResponse(
+                status_code=500,
+                content={"error": "Video analysis failed: No output video generated"}
+            )
+        audio_path = video_path.replace(".mp4", ".wav")
+        news_score = 0
+        news_summary = "Could not analyze audio content"
+        news_evidence = []
+        if has_news_features and extract_audio and transcribe_audio and perform_search and judge_content:
+            try:
+                audio_extracted = extract_audio(video_path, audio_path)
+                if audio_extracted:
+                    transcription = transcribe_audio(audio_path)
+                    if transcription:
+                        search_results = perform_search(transcription)
+                        news_result = judge_content(transcription, search_results)
+                        news_score = news_result.get("score", 0)
+                        news_summary = news_result.get("summary", "No summary provided")
+                        news_evidence = news_result.get("evidence", [])
+            except Exception as e:
+                print(f"Audio processing error: {str(e)}")
+        else:
+            print("Audio processing skipped - required components not available")
+            
+        result_id = str(uuid.uuid4())
+        analysis_results[result_id] = {
+            "output_path": output_path,
+            "audio_path": audio_path if 'audio_extracted' in locals() and audio_extracted else None,
+            "fake_score": fake_score,
+            "news_score": news_score,
+            "news_summary": news_summary,
+            "news_evidence": news_evidence,
+            "timestamp": time.time()
+        }
+
+        def delete_input_video():
+            try:
+                if os.path.exists(video_path):
+                    os.unlink(video_path)
+            except Exception as e:
+                print(f"Failed to delete input video: {str(e)}")
+            
+        background_tasks.add_task(delete_input_video)
+        return {
+            "fakeScore": fake_score,
+            "newsScore": news_score,
+            "newsSummary": news_summary,
+            "resultId": result_id
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to analyze video: {str(e)}"}
+        )
+
+@app.get("/")
+async def root():
+    """Root endpoint returning API information"""
+    return {
+        "name": "AI-Generated Video Detection Tool API",
+        "version": "1.0.0",
+        "endpoints": [
+            "/download - Download video from URL",
+            "/analyze - Analyze video for AI manipulation",
+            "/analyze-combined - Analyze video and audio content",
+            "/view/{result_id} - View analysis results",
+            "/video/{result_id} - Stream processed video",
+            "/news/* - News verification endpoints" if has_news_features else "News verification not available"
+        ]
+    }
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5001)

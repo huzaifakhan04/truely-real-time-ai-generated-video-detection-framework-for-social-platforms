@@ -1,11 +1,12 @@
-from typing import Any, Dict, List, Optional
-
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional
+)
 import httpx
 
-
 TAVILY_SEARCH_URL = "https://api.tavily.com/search"
-
-
 REPUTABLE_DOMAINS = [
     "cnn.com",
     "bbc.com", 
@@ -15,28 +16,12 @@ REPUTABLE_DOMAINS = [
     "bloomberg.com",
 ]
 
-
-def search_tavily(
+def perform_search(
     query: str,
     api_key: str,
     max_results: int = 5,
     include_domains: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
-    """
-    Search Tavily for the given query.
-
-    Args:
-        query: The query to search for
-        api_key: The API key for the Tavily API
-        max_results: The maximum number of results to return
-        include_domains: The domains to include in the search
-
-    Returns:
-        A list of dictionaries containing the results
-
-    Raises:
-        RuntimeError: If the search fails
-    """
     headers = {"Authorization": f"Bearer {api_key}"}
     body = {
         "query": query,
@@ -48,7 +33,6 @@ def search_tavily(
     domains = include_domains or REPUTABLE_DOMAINS
     if domains:
         body["include_domains"] = domains
-
     with httpx.Client(timeout=60) as client:
         resp = client.post(TAVILY_SEARCH_URL, headers=headers, json=body)
     if resp.status_code != 200:
@@ -59,13 +43,10 @@ def search_tavily(
     for r in results:
         url = r.get("url", "").lower()
         title = r.get("title", "").lower()
-        
-        # Skip archives, old content, and non-news sections
         if any(pattern in url for pattern in ["archive", "/19", "/200", "/201"]) and not any(pattern in url for pattern in ["2024", "2025"]):
             continue
         if any(pattern in title for pattern in ["this week", "looking back", "archives", "television this week"]):
             continue
-            
         normalized.append({
             "title": r.get("title") or "",
             "url": r.get("url") or "",
@@ -73,5 +54,3 @@ def search_tavily(
             "score": r.get("score"),
         })
     return normalized
-
-

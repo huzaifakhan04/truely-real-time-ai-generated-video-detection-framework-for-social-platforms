@@ -73,7 +73,6 @@ judge_prompt = """
                     "snippet": "Relevant snippet from source",
                     "score": "Source relevance/credibility score"
                 }
-                // ... more source objects
             ]
         }
         ```
@@ -224,5 +223,3 @@ similarity_prompt = """
   </output_format>
 </prompt>
 """
-
-
