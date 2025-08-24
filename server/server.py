@@ -111,20 +111,18 @@ cleanup_thread.start()
 async def view_result(result_id: str, request: Request):
     if not result_id or result_id not in analysis_results:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Result not found or has expired")
-    
     try:
         result = analysis_results[result_id]
         template_data = {
             "request": request,
             "fake_score": result["fake_score"],
-            "video_url": f"/video/{result_id}"
+            "video_url": f"/video/{result_id}",
+            "verdict": result.get("verdict", "Uncertain")
         }
-        
         if "news_score" in result:
             template_data["news_score"] = result["news_score"]
             template_data["news_summary"] = result["news_summary"]
             template_data["news_evidence"] = result["news_evidence"]
-            
         return templates.TemplateResponse("view_result.html", template_data)
     except KeyError as e:
         logger.error(f"Missing key in analysis_results for result_id {result_id}: {str(e)}")
@@ -660,7 +658,7 @@ async def analyze_audio(data: AudioAnalysisRequest, background_tasks: Background
                     if not search_results:
                         logger.warning("No search results returned")
                         news_result = {
-                            "verdict": "uncertain",
+                            "verdict": "Uncertain",
                             "confidence": 25,
                             "reasoning": "Could not find relevant information to verify content",
                             "sources": []
@@ -672,19 +670,19 @@ async def analyze_audio(data: AudioAnalysisRequest, background_tasks: Background
                         except Exception as e:
                             logger.error(f"Content credibility analysis failed: {str(e)}")
                             news_result = {
-                                "verdict": "uncertain",
+                                "verdict": "Uncertain",
                                 "confidence": 0,
                                 "reasoning": f"Analysis error: {str(e)[:100]}",
                                 "sources": []
                             }
                     if "verdict" in news_result:
                         verdict_scores = {
-                            "authentic": 100,
-                            "misleading": 50, 
-                            "fake": 0,
-                            "uncertain": 25
+                            "Authentic": 100,
+                            "Misleading": 50, 
+                            "Fake": 0,
+                            "Uncertain": 25
                         }
-                        verdict = news_result.get("verdict", "uncertain")
+                        verdict = news_result.get("verdict", "Uncertain")
                         news_score = news_result.get("confidence", verdict_scores.get(verdict, 0))
                         news_summary = news_result.get("reasoning", "No reasoning provided")
                         news_evidence = news_result.get("sources", [])
@@ -714,7 +712,7 @@ async def analyze_audio(data: AudioAnalysisRequest, background_tasks: Background
             "resultId": result_id
         }
         if news_result and "verdict" in news_result:
-            response["verdict"] = news_result.get("verdict", "uncertain")
+            response["verdict"] = news_result.get("verdict", "Uncertain")
             response["confidence"] = news_result.get("confidence", 0)
         if news_evidence:
             response["evidence"] = [
@@ -830,12 +828,12 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
                                 news_result = judge_content(transcription, search_results, GEMINI_API_KEY)
                                 if "verdict" in news_result:
                                     verdict_scores = {
-                                        "authentic": 100,
-                                        "misleading": 50, 
-                                        "fake": 0,
-                                        "uncertain": 25
+                                        "Authentic": 100,
+                                        "Misleading": 50, 
+                                        "Fake": 0,
+                                        "Uncertain": 25
                                     }
-                                    verdict = news_result.get("verdict", "uncertain")
+                                    verdict = news_result.get("verdict", "Uncertain")
                                     news_score = news_result.get("confidence", verdict_scores.get(verdict, 0))
                                     news_summary = news_result.get("reasoning", "No reasoning provided")
                                     news_evidence = news_result.get("sources", [])
@@ -888,7 +886,7 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
             "resultId": result_id
         }
         if news_result and "verdict" in news_result:
-            response["verdict"] = news_result.get("verdict", "uncertain")
+            response["verdict"] = news_result.get("verdict", "Uncertain")
             response["confidence"] = news_result.get("confidence", 0)
         if news_evidence:
             response["evidence"] = [
@@ -897,8 +895,6 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
                     "url": source.get("url", "")
                 } for source in news_evidence[:3]
             ]
-        with open(f"combined_analysis_{result_id}.json", "w") as f:
-            json.dump(response, f)
         logger.info(f"Combined analysis completed with fake_score: {fake_score}, news_score: {news_score}, result_id: {result_id}")
         return response
     except Exception as e:
