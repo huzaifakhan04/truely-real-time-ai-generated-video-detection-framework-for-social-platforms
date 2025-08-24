@@ -114,16 +114,21 @@ async def view_result(result_id: str, request: Request):
     try:
         result = analysis_results[result_id]
         template_data = {
-            "request": request,
-            "fake_score": result["fake_score"],
+            "fake_score": result.get("fake_score", "N/A"),
             "video_url": f"/video/{result_id}",
-            "verdict": result.get("verdict", "Uncertain")
+            "verdict": result.get("verdict", "Uncertain"),
+            "news_score": result.get("news_score", "N/A"),
+            "news_summary": result.get("news_summary", "No summary available")
         }
-        if "news_score" in result:
-            template_data["news_score"] = result["news_score"]
-            template_data["news_summary"] = result["news_summary"]
-            template_data["news_evidence"] = result["news_evidence"]
-        return templates.TemplateResponse("view_result.html", template_data)
+        news_evidence = result.get("news_evidence", [])
+        if news_evidence:
+            template_data["news_evidence"] = [
+                {
+                    "title": evidence.get("title", "Untitled"),
+                    "url": evidence.get("url", "#")
+                } for evidence in news_evidence
+            ]
+        return templates.TemplateResponse("view_result.html", {"request": request, **template_data})
     except KeyError as e:
         logger.error(f"Missing key in analysis_results for result_id {result_id}: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Server error while processing result {result_id}")
@@ -480,26 +485,14 @@ async def download_combined(video_url: Optional[str] = None, audio_format: str =
             "audioId": audio_id
         }
     except subprocess.CalledProcessError as e:
-        error_message = e.stderr if hasattr(e, "stderr") else str(e)
-        logger.error(f"Command failed during combined download: {error_message}")
-        for path in [video_path, audio_path]:
-            if path and os.path.exists(path):
-                try:
-                    os.unlink(path)
-                except OSError:
-                    pass
+        error_message = e.stderr if hasattr(e, 'stderr') else str(e)
+        logger.error(f"yt-dlp command failed: {error_message}")
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": f"Failed to download audio: {error_message}"}
         )
     except Exception as e:
         logger.error(f"Unexpected error during combined download: {str(e)}")
-        for path in [video_path, audio_path]:
-            if path and os.path.exists(path):
-                try:
-                    os.unlink(path)
-                except OSError:
-                    pass
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": f"Failed to download combined content: {str(e)}"}

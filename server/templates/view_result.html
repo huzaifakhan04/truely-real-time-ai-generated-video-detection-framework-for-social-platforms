@@ -718,6 +718,11 @@
             .btn-outline:hover {
                 background-color: var(--primary-light);
             }
+
+            .btn-icon {
+                background: transparent;
+                color: var(--primary-dark);
+            }
             
             @media (max-width: 768px) {
                 .container {
@@ -786,50 +791,20 @@
                 </div>
                 <h1>AI-Generated Video Detection Report</h1>
                 <p class="header-subtitle">Comprehensive Analysis Results</p>
-            </div>
-        </div>
-        <div class="container">
-            {% if news_score is defined %}
-            <div class="card">
-                <div class="card-header">
-                    <h2><i class="fas fa-balance-scale"></i> Combined Analysis</h2>
-                </div>
-                <div class="card-body">
-                    <div class="score-container">
-                        {% set combined_score = ((fake_score + news_score) / 2)|round|int %}
-                        <div class="score-ring combined-score-ring {% if combined_score > 70 %}high-score{% elif combined_score > 40 %}medium-score{% else %}low-score{% endif %}">
-                            <svg viewBox="0 0 100 100">
-                                <circle class="score-circle bg" cx="50" cy="50" r="42" />
-                                <circle class="score-circle progress combined-progress" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="{{ 263.89 * (100 - combined_score) / 100 }}" />
-                            </svg>
-                            <div class="score-text">
-                                <div class="score-value combined-score-value">{{ combined_score }}%</div>
-                                <div class="score-label">Overall Score</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="combined-verdict">
-                        <h3><i class="fas fa-balance-scale"></i> Combined Assessment</h3>
-                        <p>
-                            Based on our combined video and audio analysis:
-                            {% if fake_score > 60 and news_score < 40 %}
-                            <strong>High Concern:</strong> This content shows both visual manipulation signs and factual inaccuracies in the audio content.
-                            {% elif fake_score > 60 and news_score >= 40 %}
-                            <strong>Mixed Assessment:</strong> While the visual content shows signs of AI manipulation, the factual content may still contain accurate information.
-                            {% elif fake_score <= 60 and news_score < 40 %}
-                            <strong>Mixed Assessment:</strong> While the video appears visually authentic, the spoken content contains factual inaccuracies or misinformation.
-                            {% else %}
-                            <strong>Low Concern:</strong> Both the visual content and spoken information appear to be largely authentic and accurate.
-                            {% endif %}
-                        </p>
-                    </div>
-                    <a href="#" class="btn btn-outline" onclick="window.print()">
+                <div class="header-actions">
+                    <a href="#" class="btn btn-icon" onclick="window.print()" title="Download Report">
                         <i class="fas fa-download"></i>
-                        Download Report
+                    </a>
+                    <a href="#" class="btn btn-icon" title="Share Report">
+                        <i class="fas fa-share-alt"></i>
+                    </a>
+                    <a href="#" class="btn btn-icon" title="Help">
+                        <i class="fas fa-question-circle"></i>
                     </a>
                 </div>
             </div>
-            {% endif %}
+        </div>
+        <div class="container">
             <div class="card">
                 <div class="card-header">
                     <h2><i class="fas fa-chart-pie"></i> Video Detection Results</h2>
@@ -908,6 +883,32 @@
                             Red bounding boxes in the video highlight frames where facial inconsistencies were detected.
                         </p>
                     </div>
+                    <div class="video-container">
+                        <video controls>
+                            <source src="{{ video_url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    <div class="features">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-square icon-red"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Red Bounding Boxes</div>
+                                <div class="feature-desc">Indicate frames where facial inconsistencies were detected, suggesting AI manipulation.</div>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-square icon-green"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Green Bounding Boxes</div>
+                                <div class="feature-desc">Indicate frames where facial features appear consistent, suggesting authentic content.</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             {% if news_score is defined %}
@@ -966,11 +967,11 @@
                                 <p>{{ news_summary }}</p>
                             </div>
                         </div>
-                        {% if evidence is defined and evidence %}
+                        {% if news_evidence is defined and news_evidence %}
                         <div class="evidence-section">
                             <h3><i class="fas fa-link"></i> Referenced Sources</h3>
                             <div class="evidence-list">
-                                {% for source in evidence %}
+                                {% for source in news_evidence %}
                                 <div class="evidence-item">
                                     <div class="evidence-icon">
                                         <i class="fas fa-external-link-alt"></i>
@@ -996,39 +997,6 @@
                 </div>
             </div>
             {% endif %}
-            <div class="card" id="video-section">
-                <div class="card-header">
-                    <h2><i class="fas fa-video"></i> Analyzed Video</h2>
-                </div>
-                <div class="card-body">
-                    <div class="video-container">
-                        <video controls>
-                            <source src="{{ video_url }}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
-                    </div>
-                    <div class="features">
-                        <div class="feature-item">
-                            <div class="feature-icon">
-                                <i class="fas fa-square icon-red"></i>
-                            </div>
-                            <div class="feature-content">
-                                <div class="feature-title">Red Bounding Boxes</div>
-                                <div class="feature-desc">Indicate frames where facial inconsistencies were detected, suggesting AI manipulation.</div>
-                            </div>
-                        </div>
-                        <div class="feature-item">
-                            <div class="feature-icon">
-                                <i class="fas fa-square icon-green"></i>
-                            </div>
-                            <div class="feature-content">
-                                <div class="feature-title">Green Bounding Boxes</div>
-                                <div class="feature-desc">Indicate frames where facial features appear consistent, suggesting authentic content.</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
             <div class="card">
                 <div class="card-header">
                     <h2><i class="fas fa-info-circle"></i> How Detection Works</h2>
