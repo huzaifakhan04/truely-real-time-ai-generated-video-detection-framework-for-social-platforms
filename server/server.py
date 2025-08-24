@@ -376,6 +376,88 @@ async def download_audio(videoUrl: Optional[str] = None, videoId: Optional[str] 
             status_code=500,
             content={"error": f"Failed to download audio: {str(e)}"}
         )
+    
+@app.get("/download-combined")
+async def download_combined(videoUrl: Optional[str] = None, videoId: Optional[str] = None, audioFormat: str = "mp3", videoQuality: str = "360p"):
+    video_response = await download_video(videoUrl=videoUrl, videoId=videoId, quality=videoQuality)
+    if "error" in video_response:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to download video: {video_response['error']}"}
+        )
+    video_path = video_response["videoPath"]
+    audio_path = video_path.replace(".mp4", f".{audioFormat}")
+    audio_extracted = False
+    try:
+        print(f"Extracting audio from {video_path} to {audio_path}")
+        if has_news_features and extract_audio:
+            try:
+                audio_extracted = extract_audio(video_path, audio_path)
+                if audio_extracted:
+                    print(f"Successfully extracted audio to {audio_path}")
+                else:
+                    print("Internal audio extraction failed, will try alternative method")
+            except Exception as e:
+                print(f"FFmpeg error during audio extraction: {str(e)}")
+        if not audio_extracted or not os.path.exists(audio_path) or os.path.getsize(audio_path) == 0:
+            print(f"Direct audio extraction failed or not available, downloading audio separately")
+            if videoUrl:
+                url = videoUrl
+            else:
+                url = f"https://www.youtube.com/watch?v={videoId}"
+            if os.path.exists(audio_path):
+                audio_path = video_path.replace(".mp4", f"_download.{audioFormat}")
+            cmd = [
+                "yt-dlp",
+                "--verbose",
+                "--force-overwrites",
+                "--no-cache-dir",
+                "--no-continue",
+                "-x",
+                "--audio-format", audioFormat,
+                "--audio-quality", "0",
+                "-o", audio_path,
+                url
+            ]
+            print(f'Running command: {" ".join(cmd)}')
+            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            print(f"Audio download output: {result.stdout}")
+            audio_extracted = True
+        if not os.path.exists(audio_path) or os.path.getsize(audio_path) == 0:
+            print(f"Error: Audio file {audio_path} does not exist or is empty")
+            return JSONResponse(
+                status_code=500,
+                content={"error": "Failed to download/extract audio after multiple attempts"}
+            )
+        video_id = str(uuid.uuid4())
+        audio_id = str(uuid.uuid4())
+        analysis_results[audio_id] = {
+            "audio_path": audio_path,
+            "timestamp": time.time()
+        }
+        analysis_results[video_id] = {
+            "output_path": video_path,
+            "timestamp": time.time()
+        }
+        return {
+            "videoPath": video_path,
+            "audioPath": audio_path,
+            "videoId": video_id,
+            "audioId": audio_id
+        }
+    except subprocess.CalledProcessError as e:
+        error_message = e.stderr if hasattr(e, 'stderr') else str(e)
+        print(f"Audio download command error: {error_message}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to download audio: {error_message}"}
+        )
+    except Exception as e:
+        print(f"Combined download error: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to download combined content: {str(e)}"}
+        )
 
 class VideoAnalysisRequest(BaseModel):
     videoPath: str
@@ -418,9 +500,6 @@ async def analyze_video(data: VideoAnalysisRequest, background_tasks: Background
             status_code=500,
             content={"error": f"Failed to analyze video: {str(e)}"}
         )
-
-class CombinedAnalysisRequest(BaseModel):
-    videoPath: str
 
 class AudioAnalysisRequest(BaseModel):
     audioPath: str
@@ -501,6 +580,10 @@ async def analyze_audio(data: AudioAnalysisRequest, background_tasks: Background
             status_code=500,
             content={"error": f"Failed to analyze audio: {str(e)}"}
         )
+    
+class CombinedAnalysisRequest(BaseModel):
+    videoPath: str
+    audioPath: str
 
 @app.post("/analyze-combined")
 async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: BackgroundTasks):
@@ -510,6 +593,12 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
             status_code=400,
             content={"error": "Invalid video path"}
         )
+    audio_path = data.audioPath
+    if audio_path and not os.path.exists(audio_path):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Invalid audio path"}
+        )
     try:
         output_path = video_path.replace(".mp4", "_output.mp4")
         fake_score = run(video_path, output_path)
@@ -518,20 +607,27 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
                 status_code=500,
                 content={"error": "Video analysis failed: No output video generated"}
             )
-        audio_path = video_path.replace(".mp4", ".wav")
         news_score = 0
         news_summary = "Could not analyze audio content"
         news_evidence = []
         news_result = None
-        if has_news_features and extract_audio and transcribe_audio and perform_search and judge_content:
+        if has_news_features and transcribe_audio and perform_search and judge_content:
             try:
-                audio_extracted = extract_audio(video_path, audio_path)
-                if audio_extracted:
+                if not audio_path:
+                    audio_path = video_path.replace(".mp4", ".wav")
+                    audio_extracted = extract_audio(video_path, audio_path) if extract_audio else False
+                else:
+                    audio_extracted = True
+                if audio_extracted or os.path.exists(audio_path):
+                    print(f"Transcribing audio: {audio_path}")
                     transcription = transcribe_audio(audio_path)
                     if transcription:
+                        print("Generating search query from transcription")
                         from web.utils.judge import generate_search_query
                         search_query = generate_search_query(transcription, GEMINI_API_KEY)
+                        print(f"Searching for relevant information with query: {search_query}")
                         search_results = perform_search(search_query, TAVILY_API_KEY)
+                        print("Judging content authenticity")
                         news_result = judge_content(transcription, search_results, GEMINI_API_KEY)
                         print(f"News result: {json.dumps(news_result, indent=2)}")
                         if "verdict" in news_result:
@@ -551,19 +647,19 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
                             news_evidence = news_result.get("evidence", [])
             except Exception as e:
                 print(f"Audio processing error: {str(e)}")
+                news_summary = f"Error analyzing audio: {str(e)}"
         else:
             print("Audio processing skipped - required components not available")
         result_id = str(uuid.uuid4())
         analysis_results[result_id] = {
             "output_path": output_path,
-            "audio_path": audio_path if 'audio_extracted' in locals() and audio_extracted else None,
+            "audio_path": audio_path if (('audio_extracted' in locals() and audio_extracted) or data.audioPath) else None,
             "fake_score": fake_score,
             "news_score": news_score,
             "news_summary": news_summary,
             "news_evidence": news_evidence,
             "timestamp": time.time()
         }
-
         def delete_input_video():
             try:
                 if os.path.exists(video_path):
@@ -578,9 +674,10 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
             "newsSummary": news_summary,
             "resultId": result_id
         }
-        if "verdict" in locals() and news_result and "verdict" in news_result:
+        if news_result and "verdict" in news_result:
             response["verdict"] = news_result.get("verdict", "uncertain")
             response["confidence"] = news_result.get("confidence", 0)
+        
         if news_evidence:
             response["evidence"] = [
                 {
@@ -592,7 +689,7 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
     except Exception as e:
         return JSONResponse(
             status_code=500,
-            content={"error": f"Failed to analyze video: {str(e)}"}
+            content={"error": f"Failed to analyze content: {str(e)}"}
         )
 
 @app.get("/")
