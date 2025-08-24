@@ -123,6 +123,19 @@ async def get_video(result_id: str):
         raise HTTPException(status_code=404, detail="Video file not found")
     return FileResponse(output_path, media_type="video/mp4")
 
+@app.get("/audio/{result_id}")
+async def get_audio(result_id: str):
+    if result_id not in analysis_results:
+        raise HTTPException(status_code=404, detail="Audio not found or has expired")
+    audio_path = analysis_results[result_id].get("audio_path")
+    if not audio_path or not os.path.exists(audio_path):
+        raise HTTPException(status_code=404, detail="Audio file not found")
+    ext = audio_path.split(".")[-1].lower()
+    media_type = f"audio/{ext}"
+    if ext == "m4a":
+        media_type = "audio/mp4"
+    return FileResponse(audio_path, media_type=media_type)
+
 def get_platform_and_video_id(url):
     youtube_patterns = [
         r'(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([^&\?\/]+)'
@@ -187,7 +200,7 @@ def select_best_format(formats, target_height=360):
         best_format = valid_formats[0]
     return best_format.get("format_id") if best_format else None
 
-@app.get("/download")
+@app.get("/download-video")
 async def download_video(videoUrl: Optional[str] = None, videoId: Optional[str] = None, quality: str = "360p"):
     target_height = 360
     if videoUrl:
@@ -282,10 +295,87 @@ async def download_video(videoUrl: Optional[str] = None, videoId: Optional[str] 
             content={"error": f"Failed to download video: {str(e)}"}
         )
 
+@app.get("/download-audio")
+async def download_audio(videoUrl: Optional[str] = None, videoId: Optional[str] = None, format: str = "mp3"):
+    if videoUrl:
+        platform, extracted_id = get_platform_and_video_id(videoUrl)
+        if not platform or not extracted_id:
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Unsupported URL format"}
+            )
+        audio_id = extracted_id
+    elif not videoId:
+        return JSONResponse(
+            status_code=400,
+            content={"error": "No video ID or URL provided"}
+        )
+    else:
+        audio_id = videoId
+    try:
+        timestamp = int(time.time())
+        audio_path = os.path.join(tempfile.gettempdir(), f"ai_detector_audio_{audio_id}_{timestamp}.{format}")
+        print(f"Attempting to download audio {audio_id} to {audio_path}")
+        if videoUrl:
+            url = videoUrl
+        else:
+            url = f"https://www.youtube.com/watch?v={audio_id}"
+        cmd = [
+            "yt-dlp",
+            "--verbose",
+            "--force-overwrites",
+            "--no-cache-dir",
+            "--no-continue",
+            "-x",
+            "--audio-format", format,
+            "--audio-quality", "0",
+            "-o", audio_path,
+            url
+        ]
+        print(f'Running command: {" ".join(cmd)}')
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+        print(f"Download output: {result.stdout}")
+        if not os.path.exists(audio_path):
+            print(f"Error: File {audio_path} does not exist")
+            return JSONResponse(
+                status_code=500,
+                content={"error": "Failed to download audio: File not created"}
+            )
+        if os.path.getsize(audio_path) == 0:
+            print(f"Error: File {audio_path} is empty (0 bytes)")
+            os.unlink(audio_path)
+            return JSONResponse(
+                status_code=500,
+                content={"error": "Failed to download audio: Empty file created"}
+            )
+        file_size = os.path.getsize(audio_path)
+        print(f"Downloaded audio file size: {file_size} bytes")
+        result_id = str(uuid.uuid4())
+        analysis_results[result_id] = {
+            "audio_path": audio_path,
+            "timestamp": time.time()
+        }
+        return {
+            "audioPath": audio_path,
+            "resultId": result_id
+        }
+    except subprocess.CalledProcessError as e:
+        print(f"Download command error: {e.stdout} {e.stderr}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to download audio: {e.stderr}"}
+        )
+    except Exception as e:
+        print(f"Download error: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to download audio: {str(e)}"}
+        )
+
 class VideoAnalysisRequest(BaseModel):
     videoPath: str
 
-@app.post("/analyze")
+@app.post("/analyze-video")
 async def analyze_video(data: VideoAnalysisRequest, background_tasks: BackgroundTasks):
     video_path = data.videoPath
     if not video_path or not os.path.exists(video_path):
@@ -392,22 +482,6 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
             status_code=500,
             content={"error": f"Failed to analyze video: {str(e)}"}
         )
-
-@app.get("/")
-async def root():
-    """Root endpoint returning API information"""
-    return {
-        "name": "AI-Generated Video Detection Tool API",
-        "version": "1.0.0",
-        "endpoints": [
-            "/download - Download video from URL",
-            "/analyze - Analyze video for AI manipulation",
-            "/analyze-combined - Analyze video and audio content",
-            "/view/{result_id} - View analysis results",
-            "/video/{result_id} - Stream processed video",
-            "/news/* - News verification endpoints" if has_news_features else "News verification not available"
-        ]
-    }
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5001)
