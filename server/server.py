@@ -143,19 +143,19 @@ async def get_audio(result_id: str):
 
 def get_platform_and_video_id(url):
     youtube_patterns = [
-        r'(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([^&\?\/]+)'
+        r"(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([^&\?\/]+)"
     ]
     twitter_patterns = [
-        r'(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)'
+        r"(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)"
     ]
     facebook_patterns = [
-        r'facebook\.com\/(?:watch\/\?v=|watch\?v=|.+?\/videos\/)(\d+)',
-        r'fb\.watch\/([^\/]+)',
-        r'facebook\.com\/[^\/]+\/videos\/(\d+)'
+        r"facebook\.com\/(?:watch\/\?v=|watch\?v=|.+?\/videos\/)(\d+)",
+        r"fb\.watch\/([^\/]+)",
+        r"facebook\.com\/[^\/]+\/videos\/(\d+)"
     ]
     reddit_patterns = [
-        r'reddit\.com\/r\/[^\/]+\/comments\/([^\/]+)',
-        r'redd\.it\/(\w+)'
+        r"reddit\.com\/r\/[^\/]+\/comments\/([^\/]+)",
+        r"redd\.it\/(\w+)"
     ]
     for pattern in youtube_patterns:
         match = re.search(pattern, url)
@@ -446,7 +446,7 @@ async def download_combined(videoUrl: Optional[str] = None, videoId: Optional[st
             "audioId": audio_id
         }
     except subprocess.CalledProcessError as e:
-        error_message = e.stderr if hasattr(e, 'stderr') else str(e)
+        error_message = e.stderr if hasattr(e, "stderr") else str(e)
         print(f"Audio download command error: {error_message}")
         return JSONResponse(
             status_code=500,
@@ -653,7 +653,7 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
         result_id = str(uuid.uuid4())
         analysis_results[result_id] = {
             "output_path": output_path,
-            "audio_path": audio_path if (('audio_extracted' in locals() and audio_extracted) or data.audioPath) else None,
+            "audio_path": audio_path if (("audio_extracted" in locals() and audio_extracted) or data.audioPath) else None,
             "fake_score": fake_score,
             "news_score": news_score,
             "news_summary": news_summary,
