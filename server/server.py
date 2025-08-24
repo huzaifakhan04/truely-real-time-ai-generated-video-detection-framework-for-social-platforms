@@ -172,7 +172,7 @@ async def get_audio(result_id: str):
         logger.error(f"Error retrieving audio for result_id {result_id}: {str(e)}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Server error while retrieving audio file")
 
-def get_platform_and_video_id(url: str) -> tuple[Optional[str], Optional[str]]:
+def get_platform_and_video_id(url: str):
     url_patterns = {
         "youtube": [r"(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([^&\?\/]+)"],
         "twitter": [r"(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)"],
@@ -217,7 +217,7 @@ def get_available_formats(url: str):
         logger.error(f"Failed to get available formats for URL {url}: {str(e)}")
         return []
 
-def select_best_format(formats: list, target_height: int = 360) -> Optional[str]:
+def select_best_format(formats: list, target_height: int = 360):
     if not formats:
         logger.warning("Empty formats list provided to select_best_format")
         return None
