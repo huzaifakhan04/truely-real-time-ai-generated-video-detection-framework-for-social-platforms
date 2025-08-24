@@ -1,0 +1,84 @@
+.summary-container {
+  background-color: var(--background-subtle);
+  border-radius: var(--border-radius);
+  padding: 12px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color-light);
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.evidence-container {
+  margin-top: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+  background-color: var(--background-color);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--border-color-light);
+}
+
+.evidence-item {
+  padding: 8px 12px;
+  transition: background-color var(--transition-fast);
+}
+
+.evidence-item:not(:last-child) {
+  border-bottom: 1px solid var(--border-color-light);
+}
+
+.evidence-item:hover {
+  background-color: var(--background-subtle);
+}
+
+.evidence-link {
+  display: block;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.evidence-title {
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--primary-color);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Combined verdict section styles */
+.combined-verdict {
+  margin-top: 15px;
+  padding: 12px 15px;
+  background-color: var(--background-subtle);
+  border-radius: var(--border-radius);
+  border-left: 4px solid var(--primary-color);
+}
+
+.combined-verdict h3 {
+  display: flex;
+  align-items: center;
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.combined-verdict h3 i {
+  margin-right: 8px;
+  color: var(--primary-color);
+}
+
+.combined-verdict p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.evidence-url {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-family: "SF Mono", "Roboto Mono", monospace;
+}

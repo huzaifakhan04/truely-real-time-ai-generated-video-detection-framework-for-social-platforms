@@ -54,8 +54,24 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     }
     return true;
   }
+  if (request.action === "downloadCombined") {
+    if (request.videoUrl) {
+      downloadCombined(request.videoUrl)
+        .then(paths => sendResponse(paths))
+        .catch(error => sendResponse({error: error.message}));
+    } else {
+      sendResponse({error: "No video URL provided"});
+    }
+    return true;
+  }
   if (request.action === "analyzeVideo") {
     analyzeVideo(request.videoPath)
+      .then(result => sendResponse(result))
+      .catch(error => sendResponse({error: error.message}));
+    return true;
+  }
+  if (request.action === "analyzeCombined") {
+    analyzeCombined(request.videoPath, request.audioPath)
       .then(result => sendResponse(result))
       .catch(error => sendResponse({error: error.message}));
     return true;
@@ -134,6 +150,62 @@ async function analyzeVideo(videoPath) {
     };
   } catch (error) {
     console.error("Error analyzing video:", error);
+    throw error;
+  }
+}
+
+async function analyzeCombined(videoPath, audioPath = null) {
+  try {
+    const requestBody = audioPath 
+      ? { videoPath, audioPath }
+      : { videoPath };
+    
+    const response = await fetch(`${SERVER_URL}/analyze-combined`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
+      throw new Error("Failed to analyze the video and audio");
+    }
+    
+    const data = await response.json();
+    return {
+      fakeScore: data.fakeScore,
+      newsScore: data.newsScore || 0,
+      newsSummary: data.newsSummary || "No audio analysis available",
+      verdict: data.verdict || "uncertain",
+      confidence: data.confidence || 0,
+      evidence: data.evidence || [],
+      detailedViewUrl: `${SERVER_URL}/view/${data.resultId}`
+    };
+  } catch (error) {
+    console.error("Error analyzing video and audio:", error);
+    throw error;
+  }
+}
+
+async function downloadCombined(videoUrl) {
+  try {
+    console.log("Attempting to download video and audio from URL:", videoUrl);
+    const response = await fetch(`${SERVER_URL}/download-combined?video_url=${encodeURIComponent(videoUrl)}&audio_format=mp3&quality=360p`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to download: Server responded with status ${response.status}. ${errorText}`);
+    }
+    const data = await response.json();
+    return {
+      videoPath: data.videoPath,
+      audioPath: data.audioPath
+    };
+  } catch (error) {
+    console.error("Error downloading combined video and audio:", error);
+    if (error.message.includes("Failed to fetch")) {
+      throw new Error(`Server connection failed. Make sure the Python server is running at ${SERVER_URL}`);
+    }
     throw error;
   }
 }

@@ -642,13 +642,19 @@ async def analyze_audio(data: AudioAnalysisRequest, background_tasks: Background
                             content={"error": "Tavily API key not configured"}
                         )
                     logger.info("Generating search query from transcription")
-                    search_query = generate_search_query(transcription, GEMINI_API_KEY)
-                    if not search_query:
-                        logger.warning("Failed to generate search query")
-                        return JSONResponse(
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            content={"error": "Failed to generate search query from audio content"}
-                        )
+                    try:
+                        search_query = generate_search_query(transcription, GEMINI_API_KEY)
+                        if not search_query:
+                            words = transcription.split()[:30]
+                            search_query = " ".join(words)
+                            search_query = search_query[:350]
+                            logger.warning(f"Generated fallback search query: {search_query}")
+                    except Exception as e:
+                        logger.warning(f"Failed to generate search query: {str(e)}")
+                        words = transcription.split()[:30]
+                        search_query = " ".join(words)
+                        search_query = search_query[:350]
+                        logger.warning(f"Generated fallback search query: {search_query}")
                     logger.info(f"Searching for related content with query: {search_query}")
                     search_results = perform_search(search_query, TAVILY_API_KEY)
                     if not search_results:
@@ -660,8 +666,17 @@ async def analyze_audio(data: AudioAnalysisRequest, background_tasks: Background
                             "sources": []
                         }
                     else:
-                        logger.info("Analyzing content credibility")
-                        news_result = judge_content(transcription, search_results, GEMINI_API_KEY)
+                        try:
+                            logger.info("Analyzing content credibility")
+                            news_result = judge_content(transcription, search_results, GEMINI_API_KEY)
+                        except Exception as e:
+                            logger.error(f"Content credibility analysis failed: {str(e)}")
+                            news_result = {
+                                "verdict": "uncertain",
+                                "confidence": 0,
+                                "reasoning": f"Analysis error: {str(e)[:100]}",
+                                "sources": []
+                            }
                     if "verdict" in news_result:
                         verdict_scores = {
                             "authentic": 100,

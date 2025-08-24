@@ -104,35 +104,42 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     function startAnalysis(videoUrl) {
-      updateProgress(10, "Downloading video...");
+      updateProgress(10, "Downloading video and audio...");
       chrome.runtime.sendMessage(
-        {action: "downloadVideo", videoUrl: videoUrl},
+        {action: "downloadCombined", videoUrl: videoUrl},
         function(response) {
           if (response.error) {
             showError(response.error);
             return;
           }
-          updateProgress(40, "Processing video...");
-          chrome.runtime.sendMessage(
-            {action: "analyzeVideo", videoPath: response.videoPath},
-            function(analysisResponse) {
-              if (analysisResponse.error) {
-                showError(analysisResponse.error);
-                return;
-              }
-              updateProgress(70, "Analyzing facial features...");
-              setTimeout(() => {
-                updateProgress(90, "Finalizing results...");
-                setTimeout(() => {
-                  updateProgress(100, "Analysis complete!");
-                  
+          updateProgress(30, "Processing video frames...");
+          setTimeout(() => {
+            updateProgress(50, "Analyzing facial features...");
+            setTimeout(() => {
+              updateProgress(70, "Evaluating content credibility...");
+              chrome.runtime.sendMessage(
+                {
+                  action: "analyzeCombined", 
+                  videoPath: response.videoPath,
+                  audioPath: response.audioPath
+                },
+                function(analysisResponse) {
+                  if (analysisResponse.error) {
+                    showError(analysisResponse.error);
+                    return;
+                  }
+                  updateProgress(90, "Finalizing results...");
                   setTimeout(() => {
-                    displayResults(analysisResponse);
+                    updateProgress(100, "Analysis complete!");
+                    
+                    setTimeout(() => {
+                      displayResults(analysisResponse);
+                    }, 500);
                   }, 500);
-                }, 500);
-              }, 800);
-            }
-          );
+                }
+              );
+            }, 800);
+          }, 800);
         }
       );
     }
@@ -141,12 +148,97 @@ document.addEventListener("DOMContentLoaded", function() {
       loadingStateDiv.classList.add("hidden");
       resultStateDiv.classList.remove("hidden");
       const fakeScore = analysisResponse.fakeScore;
+      const newsScore = analysisResponse.newsScore || 0;
       const realScore = 100 - fakeScore;
       const urlInfoDiv = loadingStateDiv.querySelector(".url-info");
       if (urlInfoDiv) {
         const resultUrlInfo = urlInfoDiv.cloneNode(true);
         document.getElementById("result-url-info").innerHTML = "";
         document.getElementById("result-url-info").appendChild(resultUrlInfo);
+      }
+      detailedViewLink.href = analysisResponse.detailedViewUrl;
+      const newsSection = document.getElementById("news-analysis-section");
+      if (newsSection) {
+        if (analysisResponse.newsSummary && analysisResponse.newsSummary !== "No audio analysis available") {
+          newsSection.classList.remove("hidden");
+          const credibilityValueElem = document.getElementById("credibility-score");
+          if (credibilityValueElem) {
+            credibilityValueElem.textContent = `${newsScore}%`;
+          }
+          const verdictElem = document.getElementById("content-verdict");
+          if (verdictElem && analysisResponse.verdict) {
+            let verdictText = "Unknown";
+            let verdictClass = "medium";
+            switch(analysisResponse.verdict.toLowerCase()) {
+              case "authentic":
+                verdictText = "Authentic";
+                verdictClass = "low";
+                break;
+              case "misleading":
+                verdictText = "Misleading";
+                verdictClass = "medium";
+                break;
+              case "fake":
+                verdictText = "Fake";
+                verdictClass = "high";
+                break;
+              case "uncertain":
+                verdictText = "Uncertain";
+                verdictClass = "medium";
+                break;
+            }
+            verdictElem.textContent = verdictText;
+            verdictElem.className = `report-detail-value ${verdictClass}`;
+          }
+          const confidenceElem = document.getElementById("verdict-confidence");
+          if (confidenceElem) {
+            confidenceElem.textContent = `${analysisResponse.confidence || 0}%`;
+          }
+          const summaryElem = document.getElementById("news-summary");
+          if (summaryElem) {
+            summaryElem.textContent = analysisResponse.newsSummary;
+          }
+        } else {
+          newsSection.classList.add("hidden");
+        }
+      }
+      const combinedVerdictSection = document.getElementById("combined-verdict");
+      const combinedVerdictText = document.getElementById("combined-verdict-text");
+      if (combinedVerdictSection && combinedVerdictText && analysisResponse.newsScore) {
+        let verdictMessage = "";
+        if (fakeScore > 60 && newsScore < 40) {
+          verdictMessage = "High Concern: This content shows both visual manipulation signs and factual inaccuracies in the audio content.";
+        } else if (fakeScore > 60 && newsScore >= 40) {
+          verdictMessage = "Mixed Assessment: While the visual content shows signs of AI manipulation, the factual content may still contain accurate information.";
+        } else if (fakeScore <= 60 && newsScore < 40) {
+          verdictMessage = "Mixed Assessment: While the video appears visually authentic, the spoken content contains factual inaccuracies or misinformation.";
+        } else {
+          verdictMessage = "Low Concern: Both the visual content and spoken information appear to be largely authentic and accurate.";
+        }
+        combinedVerdictText.textContent = verdictMessage;
+        combinedVerdictSection.classList.remove("hidden");
+      } else {
+        if (combinedVerdictSection) {
+          combinedVerdictSection.classList.add("hidden");
+        }
+      }
+      const evidenceContainer = document.getElementById("evidence-list");
+      if (evidenceContainer && analysisResponse.evidence && analysisResponse.evidence.length > 0) {
+        evidenceContainer.innerHTML = "";
+        analysisResponse.evidence.forEach(source => {
+          const sourceItem = document.createElement("div");
+          sourceItem.className = "evidence-item";
+          sourceItem.innerHTML = `
+            <a href="${source.url}" target="_blank" class="evidence-link">
+              <div class="evidence-title">${source.title}</div>
+              <div class="evidence-url">${new URL(source.url).hostname}</div>
+            </a>
+          `;
+          evidenceContainer.appendChild(sourceItem);
+        });
+        document.getElementById("sources-section").classList.remove("hidden");
+      } else {
+        document.getElementById("sources-section").classList.add("hidden");
       }
       if (fakeScore > 50) {
         realResultDiv.classList.add("hidden");
@@ -160,7 +252,6 @@ document.addEventListener("DOMContentLoaded", function() {
           fakeScore > 75 ? "Very High" : "High";
         document.getElementById("fake-confidence").textContent = 
           fakeScore > 90 ? "Very High" : (fakeScore > 70 ? "High" : "Medium");
-        detailedViewLink.href = analysisResponse.detailedViewUrl;
       } else {
         fakeResultDiv.classList.add("hidden");
         realResultDiv.classList.remove("hidden");
@@ -170,6 +261,7 @@ document.addEventListener("DOMContentLoaded", function() {
           realScore > 75 ? "Very High" : "High";
         document.getElementById("real-anomalies").textContent = 
           realScore > 75 ? "Very Low" : "Low";
+        document.getElementById("real-detailed-view-link").href = analysisResponse.detailedViewUrl;
       }
     }
 

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="popup.css">
+    <link rel="stylesheet" href="popup-additions.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <title>Truely - AI-Generated Video Detector</title>
@@ -121,6 +122,36 @@
                 </div>
               </div>
             </div>
+            <div id="real-news-analysis-section" class="report-section hidden">
+              <h3><i class="fas fa-newspaper"></i> Content Credibility</h3>
+              <div class="report-details">
+                <div class="report-detail">
+                  <span class="report-detail-label"><i class="fas fa-check-circle"></i> Credibility Score</span>
+                  <span class="report-detail-value low" id="real-credibility-score">0%</span>
+                </div>
+                <div class="report-detail">
+                  <span class="report-detail-label"><i class="fas fa-gavel"></i> Content Verdict</span>
+                  <span class="report-detail-value low" id="real-content-verdict">Uncertain</span>
+                </div>
+                <div class="report-detail">
+                  <span class="report-detail-label"><i class="fas fa-percent"></i> Confidence</span>
+                  <span class="report-detail-value low" id="real-verdict-confidence">0%</span>
+                </div>
+              </div>
+              <div class="summary-container">
+                <p id="real-news-summary" class="text-sm">No summary available.</p>
+              </div>
+            </div>
+            <div id="real-sources-section" class="report-section hidden">
+              <h3><i class="fas fa-link"></i> Referenced Sources</h3>
+              <div class="evidence-container">
+                <div id="real-evidence-list"></div>
+              </div>
+            </div>
+            <a id="real-detailed-view-link" href="#" target="_blank" class="btn secondary-btn focus-visible" aria-label="View detailed analysis report">
+              <i class="fas fa-chart-line btn-icon"></i>
+              <span>View Detailed Analysis</span>
+            </a>
           </div>
           <div id="fake-result" class="result-box hidden">
             <div class="result-icon">
@@ -147,6 +178,38 @@
                   <span class="report-detail-label"><i class="fas fa-gauge-high"></i> Confidence</span>
                   <span class="report-detail-value high" id="fake-confidence">High</span>
                 </div>
+              </div>
+            </div>
+            <div id="news-analysis-section" class="report-section hidden">
+              <h3><i class="fas fa-newspaper"></i> Content Credibility</h3>
+              <div class="report-details">
+                <div class="report-detail">
+                  <span class="report-detail-label"><i class="fas fa-check-circle"></i> Credibility Score</span>
+                  <span class="report-detail-value high" id="credibility-score">0%</span>
+                </div>
+                <div class="report-detail">
+                  <span class="report-detail-label"><i class="fas fa-gavel"></i> Content Verdict</span>
+                  <span class="report-detail-value high" id="content-verdict">Uncertain</span>
+                </div>
+                <div class="report-detail">
+                  <span class="report-detail-label"><i class="fas fa-percent"></i> Confidence</span>
+                  <span class="report-detail-value high" id="verdict-confidence">0%</span>
+                </div>
+              </div>
+              <div class="summary-container">
+                <p id="news-summary" class="text-sm">No summary available.</p>
+              </div>
+            </div>
+            <div id="combined-verdict" class="report-section hidden">
+              <div class="combined-verdict">
+                <h3><i class="fas fa-balance-scale"></i> Combined Analysis</h3>
+                <p id="combined-verdict-text">Combined assessment of video and audio content analysis.</p>
+              </div>
+            </div>
+            <div id="sources-section" class="report-section hidden">
+              <h3><i class="fas fa-link"></i> Referenced Sources</h3>
+              <div class="evidence-container">
+                <div id="evidence-list"></div>
               </div>
             </div>
             <a id="detailed-view-link" href="#" target="_blank" class="btn secondary-btn focus-visible" aria-label="View detailed analysis report">

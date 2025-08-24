@@ -402,6 +402,119 @@
                 font-size: 0.9375rem;
                 line-height: 1.5;
             }
+            
+            .news-progress {
+                stroke: var(--primary-color);
+            }
+            
+            .news-score-value {
+                color: var(--primary-color);
+            }
+            
+            .content-summary {
+                background: var(--info-bg);
+                border-radius: var(--border-radius-md);
+                padding: 1.5rem;
+                margin: 2rem 0;
+                border-left: 4px solid var(--info-color);
+                position: relative;
+            }
+            
+            .content-summary h3 {
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: var(--info-color);
+                margin-bottom: 0.75rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .content-summary .summary-text {
+                color: var(--text-primary);
+                font-size: 0.9375rem;
+                line-height: 1.6;
+            }
+            
+            .evidence-section {
+                margin: 2rem 0;
+            }
+            
+            .evidence-section h3 {
+                font-size: 1.1rem;
+                font-weight: 600;
+                color: var(--text-primary);
+                margin-bottom: 1rem;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            
+            .evidence-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 1rem;
+            }
+            
+            .evidence-item {
+                background: var(--card-background);
+                border-radius: var(--border-radius);
+                padding: 1rem;
+                box-shadow: var(--shadow-xs);
+                border: 1px solid var(--border-color-light);
+                display: flex;
+                align-items: flex-start;
+                transition: box-shadow var(--transition-normal), transform var(--transition-normal);
+            }
+            
+            .evidence-item:hover {
+                box-shadow: var(--shadow-md);
+                transform: translateY(-2px);
+            }
+            
+            .evidence-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: var(--primary-light);
+                color: var(--primary-color);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 0.75rem;
+                flex-shrink: 0;
+            }
+            
+            .evidence-content {
+                flex: 1;
+            }
+            
+            .evidence-title {
+                color: var(--primary-color);
+                font-weight: 500;
+                text-decoration: none;
+                display: block;
+                margin-bottom: 4px;
+                font-size: 0.9375rem;
+                line-height: 1.4;
+            }
+            
+            .evidence-title:hover {
+                text-decoration: underline;
+            }
+            
+            .evidence-url {
+                font-size: 0.75rem;
+                color: var(--text-tertiary);
+                word-break: break-all;
+                font-family: monospace;
+            }
+            
+            @media (max-width: 768px) {
+                .evidence-list {
+                    grid-template-columns: 1fr;
+                }
+            }
 
             footer {
                 text-align: center;
@@ -574,11 +687,19 @@
                 <h1>AI-Generated Video Detection Report</h1>
                 <p class="header-subtitle">Comprehensive Analysis Results</p>
             </div>
+            <div class="header-content">
+                <div class="logo">
+                    <img src="/static/icon48.png" alt="Truely logo">
+                    <span class="logo-text">Truely</span>
+                </div>
+                <h1>Video Analysis Report</h1>
+                <p class="header-subtitle">Comprehensive detection of AI-generated content</p>
+            </div>
         </div>
         <div class="container">
             <div class="card">
                 <div class="card-header">
-                    <h2><i class="fas fa-chart-pie"></i> Detection Results</h2>
+                    <h2><i class="fas fa-chart-pie"></i> Video Detection Results</h2>
                 </div>
                 <div class="card-body">
                     <div class="score-container">
@@ -654,12 +775,112 @@
                             Red bounding boxes in the video highlight frames where facial inconsistencies were detected.
                         </p>
                     </div>
+                    {% if news_score is defined %}
+                    <div class="combined-verdict">
+                        <h3><i class="fas fa-balance-scale"></i> Combined Analysis</h3>
+                        <p>
+                            Based on our combined video and audio analysis:
+                            {% if fake_score > 60 and news_score < 40 %}
+                            <strong>High Concern:</strong> This content shows both visual manipulation signs and factual inaccuracies in the audio content.
+                            {% elif fake_score > 60 and news_score >= 40 %}
+                            <strong>Mixed Assessment:</strong> While the visual content shows signs of AI manipulation, the factual content may still contain accurate information.
+                            {% elif fake_score <= 60 and news_score < 40 %}
+                            <strong>Mixed Assessment:</strong> While the video appears visually authentic, the spoken content contains factual inaccuracies or misinformation.
+                            {% else %}
+                            <strong>Low Concern:</strong> Both the visual content and spoken information appear to be largely authentic and accurate.
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
                     <a href="#" class="btn btn-outline" onclick="window.print()">
                         <i class="fas fa-download"></i>
                         Download Report
                     </a>
                 </div>
             </div>
+            {% if news_score is defined %}
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-newspaper"></i> Content Credibility Analysis</h2>
+                </div>
+                <div class="card-body">
+                    <div class="score-container">
+                        <div class="score-ring news-score-ring">
+                            <svg viewBox="0 0 100 100">
+                                <circle class="score-circle bg" cx="50" cy="50" r="42" />
+                                <circle class="score-circle progress news-progress" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="{{ 263.89 * (100 - news_score) / 100 }}" />
+                            </svg>
+                            <div class="score-text">
+                                <div class="score-value news-score-value">{{ news_score }}%</div>
+                                <div class="score-label">Credibility</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid">
+                        <div class="stat-card">
+                            <div class="stat-icon {% if news_score > 70 %}success{% elif news_score > 40 %}warning{% else %}error{% endif %}">
+                                <i class="fas fa-newspaper"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Content Credibility</div>
+                                <div class="stat-value">{{ news_score }}%</div>
+                            </div>
+                        </div>
+                        {% if verdict is defined %}
+                        <div class="stat-card">
+                            <div class="stat-icon {% if verdict == 'authentic' %}success{% elif verdict == 'misleading' %}warning{% elif verdict == 'fake' %}error{% else %}warning{% endif %}">
+                                <i class="fas fa-gavel"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Content Verdict</div>
+                                <div class="stat-value">
+                                    {{ verdict|title }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if confidence is defined %}
+                        <div class="stat-card">
+                            <div class="stat-icon {% if confidence > 70 %}success{% elif confidence > 40 %}warning{% else %}error{% endif %}">
+                                <i class="fas fa-percent"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Verdict Confidence</div>
+                                <div class="stat-value">{{ confidence }}%</div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if news_summary is defined and news_summary %}
+                    <div class="content-summary">
+                        <h3><i class="fas fa-align-left"></i> Summary</h3>
+                        <div class="summary-text">
+                            <p>{{ news_summary }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if evidence is defined and evidence %}
+                    <div class="evidence-section">
+                        <h3><i class="fas fa-link"></i> Referenced Sources</h3>
+                        <div class="evidence-list">
+                            {% for source in evidence %}
+                            <div class="evidence-item">
+                                <div class="evidence-icon">
+                                    <i class="fas fa-external-link-alt"></i>
+                                </div>
+                                <div class="evidence-content">
+                                    <a href="{{ source.url }}" target="_blank" class="evidence-title">{{ source.title }}</a>
+                                    <div class="evidence-url">{{ source.url }}</div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
             <div class="card" id="video-section">
                 <div class="card-header">
                     <h2><i class="fas fa-video"></i> Analyzed Video</h2>
@@ -735,7 +956,44 @@
                                 <div class="feature-desc">Frames with suspicious inconsistencies are flagged, and multiple flags contribute to the overall AI-generated confidence score.</div>
                             </div>
                         </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-5"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Audio Transcription</div>
+                                <div class="feature-desc">Audio content is transcribed and analyzed for factual accuracy and credibility.</div>
+                            </div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-6"></i>
+                            </div>
+                            <div class="feature-content">
+                                <div class="feature-title">Fact Verification</div>
+                                <div class="feature-desc">Content is checked against reliable sources to verify claims and detect misinformation.</div>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-info-circle"></i> Understanding the Results</h2>
+                </div>
+                <div class="card-body">
+                    <p>Our tool provides two main types of analysis:</p>
+                    <div class="explanation">
+                        <h3>Video Analysis</h3>
+                        <p>The video analysis examines facial features and movement consistency across frames to detect signs of AI manipulation. A higher "AI-Generated" score indicates a greater likelihood that the video was created or manipulated using artificial intelligence tools.</p>
+                    </div>
+                    
+                    <div class="explanation">
+                        <h3>Content Analysis</h3>
+                        <p>The content analysis evaluates what is being said in the video against factual information from verified sources. This helps determine if the spoken content is accurate, misleading, or fabricated, regardless of whether the video itself is AI-generated.</p>
+                    </div>
+                    
+                    <p><strong>Note:</strong> This tool is intended to help identify potentially misleading content, but should not be considered as definitive proof. Always verify information from multiple reliable sources.</p>
                 </div>
             </div>
             <div class="card">
