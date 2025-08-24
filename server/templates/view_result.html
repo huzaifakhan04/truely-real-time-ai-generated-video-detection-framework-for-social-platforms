@@ -222,6 +222,13 @@
                 display: block;
             }
 
+            .score-value.high {
+                color: var(--success-color);
+            }
+            .score-value.low {
+                color: var(--error-color);
+            }
+
             .score-label {
                 font-size: 0.9rem;
                 font-weight: 500;
@@ -765,6 +772,9 @@
                 }
             }
             
+            .content-verdict-text {
+                color: var(--text-primary);
+            }
         </style>
     </head>
     <body>
@@ -907,96 +917,46 @@
                 </div>
                 <div class="card-body">
                     <div class="score-container">
-                        {% if verdict == 'authentic' %}
-                            {% set color_class = 'high-score' if confidence > 70 else 'medium-score' %}
-                            {% set displayed_score = confidence %}
-                            {% set display_label = 'Credibility' %}
-                        {% elif verdict == 'misleading' %}
-                            {% set color_class = 'medium-score' %}
-                            {% set displayed_score = 100 - confidence %}
-                            {% set display_label = 'Accuracy' %}
-                        {% elif verdict == 'fake' %}
-                            {% set color_class = 'low-score' %}
-                            {% set displayed_score = 100 - confidence %}
-                            {% set display_label = 'Accuracy' %}
-                        {% else %}
-                            {% set color_class = 'medium-score' %}
-                            {% set displayed_score = confidence if confidence is defined else news_score %}
-                            {% set display_label = 'Confidence' %}
-                        {% endif %}
-                        <div class="score-ring news-score-ring {{ color_class }} {{ verdict }}-verdict">
+                        {% set color_class = 'medium-score' %}
+                        {% set displayed_score = confidence if confidence is defined else news_score %}
+                        {% set display_label = 'Credibility' %}
+                        {% set adjusted_score = 100 - displayed_score %}
+                        <div class="score-ring news-score-ring {% if adjusted_score > 50 %}high-score{% else %}low-score{% endif %} {{ verdict }}-verdict">
                             <svg viewBox="0 0 100 100">
                                 <circle class="score-circle bg" cx="50" cy="50" r="42" />
-                                <circle class="score-circle progress news-progress" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="{{ 263.89 * (100 - displayed_score) / 100 }}" />
+                                <circle class="score-circle progress news-progress" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="{{ 263.89 * (100 - adjusted_score) / 100 }}" />
                             </svg>
                             <div class="score-text">
-                                <div class="score-value news-score-value">{{ displayed_score }}%</div>
+                                <div class="score-value news-score-value {% if adjusted_score > 50 %}high{% else %}low{% endif %}">
+                                    {{ adjusted_score }}%
+                                </div>
                                 <div class="score-label">{{ display_label }}</div>
                             </div>
                         </div>
                     </div>
                     <div class="grid">
                         <div class="stat-card">
-                            {% if verdict == 'authentic' %}
-                                <div class="stat-icon success">
-                            {% elif verdict == 'misleading' %}
-                                <div class="stat-icon warning">
-                            {% elif verdict == 'fake' %}
-                                <div class="stat-icon error">
-                            {% else %}
-                                <div class="stat-icon warning">
-                            {% endif %}
-                                <i class="fas fa-newspaper"></i>
+                            <div class="stat-icon {% if adjusted_score > 50 %}success{% else %}error{% endif %}">
+                                <i class="fas fa-percent"></i>
                             </div>
                             <div class="stat-content">
-                                <div class="stat-label">Content Assessment</div>
-                                <div class="stat-value {% if verdict == 'authentic' %}text-success{% elif verdict == 'misleading' %}text-warning{% elif verdict == 'fake' %}text-danger{% endif %}">
-                                    {{ verdict|title if verdict is defined else 'Unknown' }}
+                                <div class="stat-label">Confidence Score</div>
+                                <div class="stat-value">
+                                    {{ displayed_score }}%
                                 </div>
                             </div>
                         </div>
-                        {% if verdict is defined %}
                         <div class="stat-card">
-                            <div class="stat-icon {% if verdict == 'authentic' %}success{% elif verdict == 'misleading' %}warning{% elif verdict == 'fake' %}error{% else %}warning{% endif %}">
+                            <div class="stat-icon {% if adjusted_score > 50 %}success{% else %}error{% endif %}">
                                 <i class="fas fa-gavel"></i>
                             </div>
                             <div class="stat-content">
                                 <div class="stat-label">Content Verdict</div>
-                                <div class="stat-value {% if verdict == 'authentic' %}text-success{% elif verdict == 'misleading' %}text-warning{% elif verdict == 'fake' %}text-danger{% endif %}">
-                                    {{ verdict|title }}
+                                <div class="stat-value content-verdict-text">
+                                    {{ verdict }}
                                 </div>
                             </div>
                         </div>
-                        {% endif %}
-                        {% if confidence is defined %}
-                        <div class="stat-card">
-                            {% if verdict == 'authentic' %}
-                                <div class="stat-icon {% if confidence > 70 %}success{% elif confidence > 40 %}warning{% else %}error{% endif %}">
-                                    <i class="fas fa-percent"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">Credibility Score</div>
-                                    <div class="stat-value">{{ confidence }}%</div>
-                                </div>
-                            {% elif verdict == 'misleading' or verdict == 'fake' %}
-                                <div class="stat-icon {% if confidence > 70 %}error{% elif confidence > 40 %}warning{% else %}success{% endif %}">
-                                    <i class="fas fa-percent"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">Deception Confidence</div>
-                                    <div class="stat-value">{{ confidence }}%</div>
-                                </div>
-                            {% else %}
-                                <div class="stat-icon {% if confidence > 70 %}success{% elif confidence > 40 %}warning{% else %}error{% endif %}">
-                                    <i class="fas fa-percent"></i>
-                                </div>
-                                <div class="stat-content">
-                                    <div class="stat-label">Verdict Confidence</div>
-                                    <div class="stat-value">{{ confidence }}%</div>
-                                </div>
-                            {% endif %}
-                        </div>
-                        {% endif %}
                     </div>
                     {% if news_summary is defined and news_summary %}
                     <div class="content-analysis-container">
