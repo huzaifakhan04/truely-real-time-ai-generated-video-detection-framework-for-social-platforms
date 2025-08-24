@@ -1,5 +1,9 @@
 import time
-from typing import Dict, List, Tuple
+from typing import (
+    Dict,
+    List,
+    Tuple
+)
 from web.utils.audio import download_audio
 from web.utils.transcribe import transcribe_audio
 from web.utils.search import perform_search

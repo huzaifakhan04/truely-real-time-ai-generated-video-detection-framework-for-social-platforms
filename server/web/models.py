@@ -1,5 +1,11 @@
-from typing import List, Optional
-from pydantic import BaseModel, HttpUrl
+from typing import (
+    List,
+    Optional
+)
+from pydantic import (
+    BaseModel,
+    HttpUrl
+)
 
 class VerifyNewsRequest(BaseModel):
     video_url: HttpUrl

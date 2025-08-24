@@ -15,7 +15,6 @@ from typing import (
     Dict,
     Any
 )
-from model import run
 from fastapi import (
     FastAPI,
     Request,
@@ -30,6 +29,7 @@ from fastapi.responses import (
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from model import run
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:
@@ -205,7 +205,6 @@ async def download_video(videoUrl: Optional[str] = None, videoId: Optional[str] 
         )
     else:
         video_id = videoId
-        
     try:
         timestamp = int(time.time())
         video_path = os.path.join(tempfile.gettempdir(), f"ai_detector_video_{video_id}_{timestamp}.mp4")
@@ -363,7 +362,6 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
                 print(f"Audio processing error: {str(e)}")
         else:
             print("Audio processing skipped - required components not available")
-            
         result_id = str(uuid.uuid4())
         analysis_results[result_id] = {
             "output_path": output_path,
