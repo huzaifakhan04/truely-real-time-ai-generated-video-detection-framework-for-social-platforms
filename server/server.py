@@ -29,6 +29,7 @@ from fastapi.responses import (
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from web.config import TAVILY_API_KEY, GEMINI_API_KEY
 from model import run
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -417,6 +418,86 @@ async def analyze_video(data: VideoAnalysisRequest, background_tasks: Background
 class CombinedAnalysisRequest(BaseModel):
     videoPath: str
 
+class AudioAnalysisRequest(BaseModel):
+    audioPath: str
+
+@app.post("/analyze-audio")
+async def analyze_audio(data: AudioAnalysisRequest, background_tasks: BackgroundTasks):
+    audio_path = data.audioPath
+    if not audio_path or not os.path.exists(audio_path):
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Invalid audio path"}
+        )
+    try:
+        news_score = 0
+        news_summary = "Could not analyze audio content"
+        news_evidence = []
+        news_result = None
+        if has_news_features and transcribe_audio and perform_search and judge_content:
+            try:
+                print(f"Transcribing audio: {audio_path}")
+                transcription = transcribe_audio(audio_path)
+                if transcription:
+                    print("Generating search query from transcription")
+                    from web.utils.judge import generate_search_query
+                    search_query = generate_search_query(transcription, GEMINI_API_KEY)
+                    print(f"Searching for relevant information with query: {search_query}")
+                    search_results = perform_search(search_query, TAVILY_API_KEY)
+                    print("Judging content authenticity")
+                    news_result = judge_content(transcription, search_results, GEMINI_API_KEY)
+                    print(f"News result: {json.dumps(news_result, indent=2)}")
+                    if "verdict" in news_result:
+                        verdict_scores = {
+                            "authentic": 100,
+                            "misleading": 50, 
+                            "fake": 0,
+                            "uncertain": 25
+                        }
+                        verdict = news_result.get("verdict", "uncertain")
+                        news_score = news_result.get("confidence", verdict_scores.get(verdict, 0))
+                        news_summary = news_result.get("reasoning", "No reasoning provided")
+                        news_evidence = news_result.get("sources", [])
+                    else:
+                        news_score = news_result.get("score", 0)
+                        news_summary = news_result.get("summary", "No summary provided")
+                        news_evidence = news_result.get("evidence", [])
+            except Exception as e:
+                print(f"Audio processing error: {str(e)}")
+                news_summary = f"Error analyzing audio: {str(e)}"
+        else:
+            print("Audio processing skipped - required components not available")
+        result_id = str(uuid.uuid4())
+        analysis_results[result_id] = {
+            "audio_path": audio_path,
+            "news_score": news_score,
+            "news_summary": news_summary,
+            "news_evidence": news_evidence,
+            "timestamp": time.time()
+        }
+        response = {
+            "newsScore": news_score,
+            "newsSummary": news_summary,
+            "resultId": result_id
+        }
+        if "verdict" in news_result:
+            response["verdict"] = news_result.get("verdict", "uncertain")
+            response["confidence"] = news_result.get("confidence", 0)
+        if news_evidence:
+            response["evidence"] = [
+                {
+                    "title": source.get("title", ""),
+                    "url": source.get("url", "")
+                } for source in news_evidence[:3]
+            ]
+        return response
+    except Exception as e:
+        print(f"Audio analysis error: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to analyze audio: {str(e)}"}
+        )
+
 @app.post("/analyze-combined")
 async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: BackgroundTasks):
     video_path = data.videoPath
@@ -437,17 +518,33 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
         news_score = 0
         news_summary = "Could not analyze audio content"
         news_evidence = []
+        news_result = None
         if has_news_features and extract_audio and transcribe_audio and perform_search and judge_content:
             try:
                 audio_extracted = extract_audio(video_path, audio_path)
                 if audio_extracted:
                     transcription = transcribe_audio(audio_path)
                     if transcription:
-                        search_results = perform_search(transcription)
-                        news_result = judge_content(transcription, search_results)
-                        news_score = news_result.get("score", 0)
-                        news_summary = news_result.get("summary", "No summary provided")
-                        news_evidence = news_result.get("evidence", [])
+                        from web.utils.judge import generate_search_query
+                        search_query = generate_search_query(transcription, GEMINI_API_KEY)
+                        search_results = perform_search(search_query, TAVILY_API_KEY)
+                        news_result = judge_content(transcription, search_results, GEMINI_API_KEY)
+                        print(f"News result: {json.dumps(news_result, indent=2)}")
+                        if "verdict" in news_result:
+                            verdict_scores = {
+                                "authentic": 100,
+                                "misleading": 50, 
+                                "fake": 0,
+                                "uncertain": 25
+                            }
+                            verdict = news_result.get("verdict", "uncertain")
+                            news_score = news_result.get("confidence", verdict_scores.get(verdict, 0))
+                            news_summary = news_result.get("reasoning", "No reasoning provided")
+                            news_evidence = news_result.get("sources", [])
+                        else:
+                            news_score = news_result.get("score", 0)
+                            news_summary = news_result.get("summary", "No summary provided")
+                            news_evidence = news_result.get("evidence", [])
             except Exception as e:
                 print(f"Audio processing error: {str(e)}")
         else:
@@ -471,17 +568,47 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
                 print(f"Failed to delete input video: {str(e)}")
             
         background_tasks.add_task(delete_input_video)
-        return {
+        response = {
             "fakeScore": fake_score,
             "newsScore": news_score,
             "newsSummary": news_summary,
             "resultId": result_id
         }
+        if "verdict" in locals() and news_result and "verdict" in news_result:
+            response["verdict"] = news_result.get("verdict", "uncertain")
+            response["confidence"] = news_result.get("confidence", 0)
+        if news_evidence:
+            response["evidence"] = [
+                {
+                    "title": source.get("title", ""),
+                    "url": source.get("url", "")
+                } for source in news_evidence[:3]
+            ]
+        return response
     except Exception as e:
         return JSONResponse(
             status_code=500,
             content={"error": f"Failed to analyze video: {str(e)}"}
         )
+
+@app.get("/")
+async def root():
+    """Root endpoint returning API information"""
+    return {
+        "name": "AI-Generated Video Detection Tool API",
+        "version": "1.0.0",
+        "endpoints": [
+            "/download-video - Download video from URL",
+            "/download-audio - Download audio from URL",
+            "/analyze - Analyze video for AI manipulation",
+            "/analyze-audio - Analyze audio content for authenticity",
+            "/analyze-combined - Analyze video and audio content",
+            "/view/{result_id} - View analysis results",
+            "/video/{result_id} - Stream processed video",
+            "/audio/{result_id} - Stream processed audio",
+            "/news/* - News verification endpoints" if has_news_features else "News verification not available"
+        ]
+    }
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5001)
