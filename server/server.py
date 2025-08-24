@@ -36,16 +36,16 @@ load_dotenv()
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-if current_dir not in sys.path:
-    sys.path.append(current_dir)
-news_router = None
+current_directory = os.path.dirname(os.path.abspath(__file__))
+if current_directory not in sys.path:
+    sys.path.append(current_directory)
+router = None
 extract_audio = None
 transcribe_audio = None
 perform_search = None
 judge_content = None
 try:
-    from web.routes import router as news_router
+    from web.routes import router
     from web.utils.audio import extract_audio
     from web.utils.transcribe import transcribe_audio
     from web.utils.search import perform_search
@@ -67,9 +67,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-if news_router and has_news_features:
+if router and has_news_features:
     try:
-        app.include_router(news_router, prefix="/news", tags=["news"])
+        app.include_router(router, prefix="/news", tags=["news"])
     except Exception as e:
         print(f"Failed to include news router: {e}")
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
