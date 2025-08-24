@@ -9,18 +9,20 @@ import re
 import json
 import uvicorn
 import sys
+import logging
 from pydantic import BaseModel
 from typing import (
-    Optional,
     Dict,
-    Any
+    Any,
+    Optional
 )
 from dotenv import load_dotenv
 from fastapi import (
     FastAPI,
     Request,
     HTTPException,
-    BackgroundTasks
+    BackgroundTasks,
+    status
 )
 from fastapi.responses import (
     JSONResponse,
@@ -39,6 +41,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 current_directory = os.path.dirname(os.path.abspath(__file__))
 if current_directory not in sys.path:
     sys.path.append(current_directory)
+
 router = None
 extract_audio = None
 transcribe_audio = None
@@ -53,12 +56,17 @@ try:
     has_news_features = True
 except ImportError as e:
     has_news_features = False
-    print(f"News verification features unavailable: {e}")
+    raise ImportError(f"Failed to import news features: {e}")
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
 app = FastAPI()
 static_dir = os.path.join(os.path.dirname(__file__), "static")
 if os.path.exists(static_dir):
     app.mount("/static", StaticFiles(directory=static_dir), name="static")
 else:
+    logger.critical(f"Static directory not found: {static_dir}")
     raise FileNotFoundError(f"Static directory not found: {static_dir}")
 app.add_middleware(
     CORSMiddleware,
@@ -67,15 +75,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 if router and has_news_features:
     try:
         app.include_router(router, prefix="/news", tags=["news"])
     except Exception as e:
-        print(f"Failed to include news router: {e}")
+        logger.critical(f"Failed to include news router: {str(e)}")
+        raise ImportError(f"Failed to include news router: {e}")
+
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 if os.path.exists(templates_dir):
     templates = Jinja2Templates(directory=templates_dir)
 else:
+    logger.critical(f"Templates directory not found: {templates_dir}")
     raise FileNotFoundError(f"Templates directory not found: {templates_dir}")
 analysis_results: Dict[str, Dict[str, Any]] = {}
 
@@ -92,13 +104,15 @@ def cleanup_old_results():
                     audio_path = result.get("audio_path")
                     if audio_path and os.path.exists(audio_path):
                         os.unlink(audio_path)
+                    to_remove.append(result_id)
                 except Exception as e:
-                    print(f"Failed to cleanup files for result {result_id}: {e}")
-                to_remove.append(result_id)
+                    logger.error(f"Failed to delete files for result {result_id}: {str(e)}")
         for result_id in to_remove:
-            del analysis_results[result_id]
-            if to_remove:
-                print(f"Cleaned up result: {result_id}")
+            try:
+                del analysis_results[result_id]
+                logger.info(f"Cleaned up result {result_id} and associated files")
+            except KeyError:
+                logger.warning(f"Failed to remove result {result_id} from analysis_results - key not found")
         time.sleep(300)
 
 cleanup_thread = threading.Thread(target=cleanup_old_results, daemon=True)
@@ -106,76 +120,76 @@ cleanup_thread.start()
 
 @app.get("/view/{result_id}", response_class=HTMLResponse)
 async def view_result(result_id: str, request: Request):
-    if result_id not in analysis_results:
-        raise HTTPException(status_code=404, detail="Result not found or has expired")
-    template_data = {
-        "request": request,
-        "fake_score": analysis_results[result_id]["fake_score"],
-        "video_url": f"/video/{result_id}"
-    }
-    if "news_score" in analysis_results[result_id]:
-        template_data["news_score"] = analysis_results[result_id]["news_score"]
-        template_data["news_summary"] = analysis_results[result_id]["news_summary"]
-        template_data["news_evidence"] = analysis_results[result_id]["news_evidence"]
-    return templates.TemplateResponse("view_result.html", template_data)
+    if not result_id or result_id not in analysis_results:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Result not found or has expired")
+    
+    try:
+        result = analysis_results[result_id]
+        template_data = {
+            "request": request,
+            "fake_score": result["fake_score"],
+            "video_url": f"/video/{result_id}"
+        }
+        
+        if "news_score" in result:
+            template_data["news_score"] = result["news_score"]
+            template_data["news_summary"] = result["news_summary"]
+            template_data["news_evidence"] = result["news_evidence"]
+            
+        return templates.TemplateResponse("view_result.html", template_data)
+    except KeyError as e:
+        logger.error(f"Missing key in analysis_results for result_id {result_id}: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Server error while processing result {result_id}")
 
 @app.get("/video/{result_id}")
 async def get_video(result_id: str):
-    if result_id not in analysis_results:
-        raise HTTPException(status_code=404, detail="Video not found or has expired")
-    output_path = analysis_results[result_id]["output_path"]
-    if not os.path.exists(output_path):
-        raise HTTPException(status_code=404, detail="Video file not found")
-    return FileResponse(output_path, media_type="video/mp4")
+    if not result_id or result_id not in analysis_results:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video not found or has expired")
+    try:
+        output_path = analysis_results[result_id]["output_path"]
+        if not output_path or not os.path.exists(output_path):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Video file not found")
+        return FileResponse(output_path, media_type="video/mp4")
+    except KeyError:
+        logger.error(f"Missing 'output_path' key in analysis_results for result_id {result_id}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+                            detail="Server error while retrieving video file")
 
 @app.get("/audio/{result_id}")
 async def get_audio(result_id: str):
-    if result_id not in analysis_results:
-        raise HTTPException(status_code=404, detail="Audio not found or has expired")
-    audio_path = analysis_results[result_id].get("audio_path")
-    if not audio_path or not os.path.exists(audio_path):
-        raise HTTPException(status_code=404, detail="Audio file not found")
-    ext = audio_path.split(".")[-1].lower()
-    media_type = f"audio/{ext}"
-    if ext == "m4a":
-        media_type = "audio/mp4"
-    return FileResponse(audio_path, media_type=media_type)
+    if not result_id or result_id not in analysis_results:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audio not found or has expired")
+    try:
+        audio_path = analysis_results[result_id].get("audio_path")
+        if not audio_path or not os.path.exists(audio_path):
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Audio file not found")
+        ext = audio_path.split(".")[-1].lower()
+        media_type = f"audio/{ext}"
+        if ext == "m4a":
+            media_type = "audio/mp4"
+        return FileResponse(audio_path, media_type=media_type)
+    except Exception as e:
+        logger.error(f"Error retrieving audio for result_id {result_id}: {str(e)}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Server error while retrieving audio file")
 
-def get_platform_and_video_id(url):
-    youtube_patterns = [
-        r"(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([^&\?\/]+)"
-    ]
-    twitter_patterns = [
-        r"(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)"
-    ]
-    facebook_patterns = [
-        r"facebook\.com\/(?:watch\/\?v=|watch\?v=|.+?\/videos\/)(\d+)",
-        r"fb\.watch\/([^\/]+)",
-        r"facebook\.com\/[^\/]+\/videos\/(\d+)"
-    ]
-    reddit_patterns = [
-        r"reddit\.com\/r\/[^\/]+\/comments\/([^\/]+)",
-        r"redd\.it\/(\w+)"
-    ]
-    for pattern in youtube_patterns:
-        match = re.search(pattern, url)
-        if match:
-            return "youtube", match.group(1)
-    for pattern in twitter_patterns:
-        match = re.search(pattern, url)
-        if match:
-            return "twitter", match.group(1)
-    for pattern in facebook_patterns:
-        match = re.search(pattern, url)
-        if match:
-            return "facebook", match.group(1)
-    for pattern in reddit_patterns:
-        match = re.search(pattern, url)
-        if match:
-            return "reddit", match.group(1)
+def get_platform_and_video_id(url: str) -> tuple[Optional[str], Optional[str]]:
+    url_patterns = {
+        "youtube": [r"(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([^&\?\/]+)"],
+        "twitter": [r"(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)"],
+        "facebook": [r"facebook\.com\/(?:watch\/\?v=|watch\?v=|.+?\/videos\/)(\d+)",r"fb\.watch\/([^\/]+)",r"facebook\.com\/[^\/]+\/videos\/(\d+)"],
+        "reddit": [r"reddit\.com\/r\/[^\/]+\/comments\/([^\/]+)",r"redd\.it\/(\w+)"]
+    }
+    for platforms, patterns in url_patterns.items():
+        for p in patterns:
+            match = re.search(p, url)
+            if match:
+                return platforms, match.group(1)
     return None, None
 
-def get_available_formats(url):
+def get_available_formats(url: str):
+    if not url:
+        logger.error("Empty URL provided to get_available_formats")
+        return []
     try:
         cmd = [
             "yt-dlp",
@@ -183,65 +197,84 @@ def get_available_formats(url):
             "--no-playlist",
             url
         ]
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        video_info = json.loads(result.stdout)
-        return video_info.get("formats", [])
+        result = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=30)
+        if not result.stdout:
+            logger.error(f"Empty response from yt-dlp for URL: {url}")
+            return []
+        try:
+            video_info = json.loads(result.stdout)
+            return video_info.get("formats", [])
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse yt-dlp JSON response for URL {url}: {str(e)}")
+            return []
+    except subprocess.CalledProcessError as e:
+        logger.error(f"yt-dlp command failed for URL {url}: {e.stderr}")
+        return []
+    except subprocess.TimeoutExpired:
+        logger.error(f"yt-dlp command timed out for URL {url}")
+        return []
     except Exception as e:
-        print(f"Error getting formats: {str(e)}")
+        logger.error(f"Failed to get available formats for URL {url}: {str(e)}")
         return []
 
-def select_best_format(formats, target_height=360):
-    video_formats = [f for f in formats if f.get("height") and f.get("vcodec") != "none"]
-    if not video_formats:
+def select_best_format(formats: list, target_height: int = 360) -> Optional[str]:
+    if not formats:
+        logger.warning("Empty formats list provided to select_best_format")
         return None
-    valid_formats = sorted(video_formats, key=lambda x: x.get("height", 0))
-    best_format = None
-    for fmt in valid_formats:
-        if fmt.get("height", 0) <= target_height:
-            best_format = fmt
-        else:
-            break
-    if not best_format and valid_formats:
-        best_format = valid_formats[0]
-    return best_format.get("format_id") if best_format else None
+    try:
+        video_formats = [f for f in formats if f.get("height") and f.get("vcodec") != "none"]
+        if not video_formats:
+            logger.warning("No valid video formats found")
+            return None
+        valid_formats = sorted(video_formats, key=lambda x: x.get("height", 0))
+        best_format = None
+        for fmt in valid_formats:
+            if fmt.get("height", 0) <= target_height:
+                best_format = fmt
+            else:
+                break
+        if not best_format and valid_formats:
+            best_format = valid_formats[0]
+        return best_format.get("format_id") if best_format else None
+    except Exception as e:
+        logger.error(f"Error selecting best format: {str(e)}")
+        return None
 
 @app.get("/download-video")
-async def download_video(videoUrl: Optional[str] = None, videoId: Optional[str] = None, quality: str = "360p"):
-    target_height = 360
-    if videoUrl:
-        platform, extracted_id = get_platform_and_video_id(videoUrl)
-        if not platform or not extracted_id:
-            return JSONResponse(
-                status_code=400,
-                content={"error": "Unsupported URL format"}
-            )
-        video_id = extracted_id
-    elif not videoId:
+async def download_video(video_url: Optional[str] = None, quality: str = "360p"):
+    if not video_url:
         return JSONResponse(
-            status_code=400,
-            content={"error": "No video ID or URL provided"}
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "No video URL provided"}
         )
-    else:
-        video_id = videoId
+    platform, extracted_id = get_platform_and_video_id(video_url)
+    if not platform or not extracted_id:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Unsupported URL format"}
+        )
+    video_id = extracted_id
+    target_height = 360
+    if quality and quality.lower().endswith("p"):
+        try:
+            requested_height = int(quality[:-1])
+            if requested_height > 0:
+                target_height = requested_height
+        except ValueError:
+            logger.warning(f"Invalid quality parameter: {quality}, using default: 360p")
+    
     try:
         timestamp = int(time.time())
         video_path = os.path.join(tempfile.gettempdir(), f"ai_detector_video_{video_id}_{timestamp}.mp4")
-        print(f"Attempting to download video {video_id} to {video_path}")
-        if videoUrl:
-            url = videoUrl
-        else:
-            url = f"https://www.youtube.com/watch?v={video_id}"
+        url = video_url
         format_option = []
         if platform in ["facebook", "reddit"]:
-            print(f"{platform.capitalize()} video detected, analyzing available formats...")
             formats = get_available_formats(url)
             format_id = select_best_format(formats, target_height)
             if format_id:
                 format_option = ["-f", format_id]
-                print(f"Selected format ID: {format_id}")
             else:
                 format_option = ["-f", "best"]
-                print("Using default format selection")
         else:
             format_option = ["-f", f"best[height<={target_height}]"]
         cmd = [
@@ -255,76 +288,81 @@ async def download_video(videoUrl: Optional[str] = None, videoId: Optional[str] 
             "-o", video_path,
             url
         ]
-        print(f'Running command: {" ".join(cmd)}')
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        print(f"Download output: {result.stdout}")
-        if not os.path.exists(video_path):
-            print(f"Error: File {video_path} does not exist")
+        logger.info(f"Downloading video from {url} with options: {' '.join(format_option)}")
+        try:
+            _ = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=180)
+        except subprocess.TimeoutExpired:
+            logger.error(f"Video download timed out for URL: {url}")
             return JSONResponse(
-                status_code=500,
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                content={"error": "Video download timed out"}
+            )
+        if not os.path.exists(video_path):
+            logger.error(f"Video file not created after download: {video_path}")
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"error": "Failed to download video: File not created"}
             )
         if os.path.getsize(video_path) == 0:
-            print(f"Error: File {video_path} is empty (0 bytes)")
+            logger.error(f"Downloaded video file is empty: {video_path}")
+            try:
+                os.unlink(video_path)
+            except OSError:
+                pass
             return JSONResponse(
-                status_code=500,
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"error": "Failed to download video: Empty file created"}
             )
-        file_size = os.path.getsize(video_path)
-        print(f"Downloaded file size: {file_size} bytes")
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
-            print(f'Error: OpenCV couldn\'t open {video_path}')
-            os.unlink(video_path)
+            logger.error(f"Downloaded video is corrupted or in unsupported format: {video_path}")
+            try:
+                os.unlink(video_path)
+            except OSError:
+                pass
             return JSONResponse(
-                status_code=500,
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"error": "Downloaded video is corrupted or in an unsupported format"}
             )
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
-        width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
-        height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
-        print(f"Video info: {width}x{height}, {fps} fps, {frame_count} frames")
         cap.release()
+        logger.info(f"Successfully downloaded video to {video_path}")
         return {"videoPath": video_path}
     except subprocess.CalledProcessError as e:
-        print(f"Download command error: {e.stdout} {e.stderr}")
+        error_message = e.stderr if hasattr(e, 'stderr') else str(e)
+        logger.error(f"yt-dlp command failed: {error_message}")
         return JSONResponse(
-            status_code=500,
-            content={"error": f"Failed to download video: {e.stderr}"}
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"error": f"Failed to download video: {error_message}"}
         )
     except Exception as e:
-        print(f"Download error: {str(e)}")
+        logger.error(f"Unexpected error in download_video: {str(e)}")
         return JSONResponse(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": f"Failed to download video: {str(e)}"}
         )
 
 @app.get("/download-audio")
-async def download_audio(videoUrl: Optional[str] = None, videoId: Optional[str] = None, format: str = "mp3"):
-    if videoUrl:
-        platform, extracted_id = get_platform_and_video_id(videoUrl)
-        if not platform or not extracted_id:
-            return JSONResponse(
-                status_code=400,
-                content={"error": "Unsupported URL format"}
-            )
-        audio_id = extracted_id
-    elif not videoId:
+async def download_audio(video_url: Optional[str] = None, format: str = "mp3"):
+    if not video_url:
         return JSONResponse(
-            status_code=400,
-            content={"error": "No video ID or URL provided"}
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "No video URL provided"}
         )
-    else:
-        audio_id = videoId
+    allowed_formats = ["mp3", "m4a", "wav", "aac", "flac", "opus"]
+    if format not in allowed_formats:
+        logger.warning(f"Unsupported audio format requested: {format}, using mp3 instead")
+        format = "mp3"
+    platform, extracted_id = get_platform_and_video_id(video_url)
+    if not platform or not extracted_id:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Unsupported URL format"}
+        )
+    audio_id = extracted_id
     try:
         timestamp = int(time.time())
         audio_path = os.path.join(tempfile.gettempdir(), f"ai_detector_audio_{audio_id}_{timestamp}.{format}")
-        print(f"Attempting to download audio {audio_id} to {audio_path}")
-        if videoUrl:
-            url = videoUrl
-        else:
-            url = f"https://www.youtube.com/watch?v={audio_id}"
+        url = video_url
         cmd = [
             "yt-dlp",
             "--verbose",
@@ -337,76 +375,94 @@ async def download_audio(videoUrl: Optional[str] = None, videoId: Optional[str] 
             "-o", audio_path,
             url
         ]
-        print(f'Running command: {" ".join(cmd)}')
-        result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-        print(f"Download output: {result.stdout}")
-        if not os.path.exists(audio_path):
-            print(f"Error: File {audio_path} does not exist")
+        logger.info(f"Downloading audio from {url} in format: {format}")
+        try:
+            _ = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=120)
+        except subprocess.TimeoutExpired:
+            logger.error(f"Audio download timed out for URL: {url}")
             return JSONResponse(
-                status_code=500,
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                content={"error": "Audio download timed out"}
+            )
+        if not os.path.exists(audio_path):
+            logger.error(f"Audio file not created after download: {audio_path}")
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"error": "Failed to download audio: File not created"}
             )
         if os.path.getsize(audio_path) == 0:
-            print(f"Error: File {audio_path} is empty (0 bytes)")
-            os.unlink(audio_path)
+            logger.error(f"Downloaded audio file is empty: {audio_path}")
+            try:
+                os.unlink(audio_path)
+            except OSError:
+                pass
             return JSONResponse(
-                status_code=500,
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"error": "Failed to download audio: Empty file created"}
             )
-        file_size = os.path.getsize(audio_path)
-        print(f"Downloaded audio file size: {file_size} bytes")
         result_id = str(uuid.uuid4())
         analysis_results[result_id] = {
             "audio_path": audio_path,
             "timestamp": time.time()
         }
+        logger.info(f"Successfully downloaded audio to {audio_path} with result_id {result_id}")
         return {
             "audioPath": audio_path,
             "resultId": result_id
         }
     except subprocess.CalledProcessError as e:
-        print(f"Download command error: {e.stdout} {e.stderr}")
+        error_message = e.stderr if hasattr(e, 'stderr') else str(e)
+        logger.error(f"yt-dlp command failed: {error_message}")
         return JSONResponse(
-            status_code=500,
-            content={"error": f"Failed to download audio: {e.stderr}"}
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"error": f"Failed to download audio: {error_message}"}
         )
     except Exception as e:
-        print(f"Download error: {str(e)}")
+        logger.error(f"Unexpected error in download_audio: {str(e)}")
         return JSONResponse(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": f"Failed to download audio: {str(e)}"}
         )
     
 @app.get("/download-combined")
-async def download_combined(videoUrl: Optional[str] = None, videoId: Optional[str] = None, audioFormat: str = "mp3", videoQuality: str = "360p"):
-    video_response = await download_video(videoUrl=videoUrl, videoId=videoId, quality=videoQuality)
-    if "error" in video_response:
+async def download_combined(video_url: Optional[str] = None, audio_format: str = "mp3", quality: str = "360p"):
+    if not video_url:
         return JSONResponse(
-            status_code=500,
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "No video URL provided"}
+        )
+    allowed_formats = ["mp3", "m4a", "wav", "aac", "flac", "opus"]
+    if audio_format not in allowed_formats:
+        logger.warning(f"Unsupported audio format requested: {audio_format}, using mp3 instead")
+        audio_format = "mp3"
+    logger.info(f"Downloading video from URL: {video_url}")
+    video_response = await download_video(video_url=video_url, quality=quality)
+    if "error" in video_response:
+        logger.error(f"Video download failed: {video_response.get('error', 'Unknown error')}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": f"Failed to download video: {video_response['error']}"}
         )
     video_path = video_response["videoPath"]
-    audio_path = video_path.replace(".mp4", f".{audioFormat}")
+    audio_path = video_path.replace(".mp4", f".{audio_format}")
     audio_extracted = False
     try:
-        print(f"Extracting audio from {video_path} to {audio_path}")
         if has_news_features and extract_audio:
             try:
+                logger.info(f"Extracting audio from video to {audio_path}")
                 audio_extracted = extract_audio(video_path, audio_path)
                 if audio_extracted:
-                    print(f"Successfully extracted audio to {audio_path}")
+                    logger.info(f"Successfully extracted audio to {audio_path}")
                 else:
-                    print("Internal audio extraction failed, will try alternative method")
+                    logger.warning(f"Failed to extract audio from {video_path}")
             except Exception as e:
-                print(f"FFmpeg error during audio extraction: {str(e)}")
+                logger.error(f"Audio extraction error: {str(e)}")
         if not audio_extracted or not os.path.exists(audio_path) or os.path.getsize(audio_path) == 0:
-            print(f"Direct audio extraction failed or not available, downloading audio separately")
-            if videoUrl:
-                url = videoUrl
-            else:
-                url = f"https://www.youtube.com/watch?v={videoId}"
+            logger.info(f"Downloading audio directly from URL: {video_url}")
+            url = video_url
             if os.path.exists(audio_path):
-                audio_path = video_path.replace(".mp4", f"_download.{audioFormat}")
+                audio_path = video_path.replace(".mp4", f"_download.{audio_format}")
+                logger.info(f"Using alternative audio path: {audio_path}")
             cmd = [
                 "yt-dlp",
                 "--verbose",
@@ -414,19 +470,24 @@ async def download_combined(videoUrl: Optional[str] = None, videoId: Optional[st
                 "--no-cache-dir",
                 "--no-continue",
                 "-x",
-                "--audio-format", audioFormat,
+                "--audio-format", audio_format,
                 "--audio-quality", "0",
                 "-o", audio_path,
                 url
             ]
-            print(f'Running command: {" ".join(cmd)}')
-            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
-            print(f"Audio download output: {result.stdout}")
-            audio_extracted = True
+            try:
+                _ = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=120)
+                logger.info(f"Downloaded audio to {audio_path}")
+            except subprocess.TimeoutExpired:
+                logger.error(f"Audio download timed out for URL: {url}")
+                return JSONResponse(
+                    status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                    content={"error": "Audio download timed out"}
+                )
         if not os.path.exists(audio_path) or os.path.getsize(audio_path) == 0:
-            print(f"Error: Audio file {audio_path} does not exist or is empty")
+            logger.error("Failed to obtain valid audio file after multiple attempts")
             return JSONResponse(
-                status_code=500,
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"error": "Failed to download/extract audio after multiple attempts"}
             )
         video_id = str(uuid.uuid4())
@@ -439,6 +500,7 @@ async def download_combined(videoUrl: Optional[str] = None, videoId: Optional[st
             "output_path": video_path,
             "timestamp": time.time()
         }
+        logger.info(f"Successfully prepared combined content. Video ID: {video_id}, Audio ID: {audio_id}")
         return {
             "videoPath": video_path,
             "audioPath": audio_path,
@@ -447,36 +509,83 @@ async def download_combined(videoUrl: Optional[str] = None, videoId: Optional[st
         }
     except subprocess.CalledProcessError as e:
         error_message = e.stderr if hasattr(e, "stderr") else str(e)
-        print(f"Audio download command error: {error_message}")
+        logger.error(f"Command failed during combined download: {error_message}")
+        for path in [video_path, audio_path]:
+            if path and os.path.exists(path):
+                try:
+                    os.unlink(path)
+                except OSError:
+                    pass
         return JSONResponse(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": f"Failed to download audio: {error_message}"}
         )
     except Exception as e:
-        print(f"Combined download error: {str(e)}")
+        logger.error(f"Unexpected error during combined download: {str(e)}")
+        for path in [video_path, audio_path]:
+            if path and os.path.exists(path):
+                try:
+                    os.unlink(path)
+                except OSError:
+                    pass
         return JSONResponse(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": f"Failed to download combined content: {str(e)}"}
         )
 
 class VideoAnalysisRequest(BaseModel):
     videoPath: str
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "videoPath": "/tmp/video_123456.mp4"
+            }
+        }
 
 @app.post("/analyze-video")
 async def analyze_video(data: VideoAnalysisRequest, background_tasks: BackgroundTasks):
     video_path = data.videoPath
-    if not video_path or not os.path.exists(video_path):
+    if not video_path:
         return JSONResponse(
-            status_code=400,
-            content={"error": "Invalid video path"}
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Missing video path"}
+        )
+    if not os.path.exists(video_path):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Video file not found at specified path"}
+        )
+    if not os.path.isfile(video_path):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Provided path is not a file"}
+        )
+    if os.path.getsize(video_path) == 0:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Video file is empty"}
         )
     try:
         output_path = video_path.replace(".mp4", "_output.mp4")
+        
+        logger.info(f"Starting video analysis for {video_path}")
         fake_score = run(video_path, output_path)
-        if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+        if not os.path.exists(output_path):
+            logger.error(f"Analysis completed but no output video was generated at {output_path}")
             return JSONResponse(
-                status_code=500,
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"error": "Video analysis failed: No output video generated"}
+            )
+        if os.path.getsize(output_path) == 0:
+            logger.error(f"Analysis completed but output video is empty: {output_path}")
+            try:
+                os.unlink(output_path)
+            except OSError:
+                pass
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"error": "Video analysis failed: Empty output video generated"}
             )
         result_id = str(uuid.uuid4())
         analysis_results[result_id] = {
@@ -488,48 +597,97 @@ async def analyze_video(data: VideoAnalysisRequest, background_tasks: Background
             try:
                 if os.path.exists(video_path):
                     os.unlink(video_path)
+                    logger.info(f"Deleted input video: {video_path}")
             except Exception as e:
-                print(f"Failed to delete input video: {str(e)}")
+                logger.error(f"Failed to delete input video {video_path}: {str(e)}")
         background_tasks.add_task(delete_input_video)
+        logger.info(f"Video analysis completed with fake_score: {fake_score}, result_id: {result_id}")
         return {
             "fakeScore": fake_score,
             "resultId": result_id
         }
     except Exception as e:
+        logger.error(f"Error during video analysis: {str(e)}")
         return JSONResponse(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": f"Failed to analyze video: {str(e)}"}
         )
 
 class AudioAnalysisRequest(BaseModel):
     audioPath: str
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "audioPath": "/tmp/audio_123456.mp3"
+            }
+        }
 
 @app.post("/analyze-audio")
 async def analyze_audio(data: AudioAnalysisRequest, background_tasks: BackgroundTasks):
     audio_path = data.audioPath
-    if not audio_path or not os.path.exists(audio_path):
+    if not audio_path:
         return JSONResponse(
-            status_code=400,
-            content={"error": "Invalid audio path"}
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Missing audio path"}
+        )
+    if not os.path.exists(audio_path):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Audio file not found at specified path"}
+        )
+    if not os.path.isfile(audio_path):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Provided path is not a file"}
+        )
+    if os.path.getsize(audio_path) == 0:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Audio file is empty"}
         )
     try:
         news_score = 0
         news_summary = "Could not analyze audio content"
         news_evidence = []
-        news_result = None
+        news_result = {}
         if has_news_features and transcribe_audio and perform_search and judge_content:
             try:
-                print(f"Transcribing audio: {audio_path}")
+                logger.info(f"Starting transcription of audio: {audio_path}")
                 transcription = transcribe_audio(audio_path)
                 if transcription:
-                    print("Generating search query from transcription")
                     from web.utils.judge import generate_search_query
+                    if not GEMINI_API_KEY:
+                        return JSONResponse(
+                            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                            content={"error": "Gemini API key not configured"}
+                        )
+                    if not TAVILY_API_KEY:
+                        return JSONResponse(
+                            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                            content={"error": "Tavily API key not configured"}
+                        )
+                    logger.info("Generating search query from transcription")
                     search_query = generate_search_query(transcription, GEMINI_API_KEY)
-                    print(f"Searching for relevant information with query: {search_query}")
+                    if not search_query:
+                        logger.warning("Failed to generate search query")
+                        return JSONResponse(
+                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                            content={"error": "Failed to generate search query from audio content"}
+                        )
+                    logger.info(f"Searching for related content with query: {search_query}")
                     search_results = perform_search(search_query, TAVILY_API_KEY)
-                    print("Judging content authenticity")
-                    news_result = judge_content(transcription, search_results, GEMINI_API_KEY)
-                    print(f"News result: {json.dumps(news_result, indent=2)}")
+                    if not search_results:
+                        logger.warning("No search results returned")
+                        news_result = {
+                            "verdict": "uncertain",
+                            "confidence": 25,
+                            "reasoning": "Could not find relevant information to verify content",
+                            "sources": []
+                        }
+                    else:
+                        logger.info("Analyzing content credibility")
+                        news_result = judge_content(transcription, search_results, GEMINI_API_KEY)
                     if "verdict" in news_result:
                         verdict_scores = {
                             "authentic": 100,
@@ -545,11 +703,14 @@ async def analyze_audio(data: AudioAnalysisRequest, background_tasks: Background
                         news_score = news_result.get("score", 0)
                         news_summary = news_result.get("summary", "No summary provided")
                         news_evidence = news_result.get("evidence", [])
+                else:
+                    logger.warning(f"Failed to transcribe audio: {audio_path}")
             except Exception as e:
-                print(f"Audio processing error: {str(e)}")
-                news_summary = f"Error analyzing audio: {str(e)}"
+                logger.error(f"Audio processing failed: {str(e)}")
+                news_summary = f"Audio analysis error: {str(e)}"
         else:
-            print("Audio processing skipped - required components not available")
+            logger.warning("News features not available for audio analysis")
+            news_summary = "News analysis features not available"
         result_id = str(uuid.uuid4())
         analysis_results[result_id] = {
             "audio_path": audio_path,
@@ -563,7 +724,7 @@ async def analyze_audio(data: AudioAnalysisRequest, background_tasks: Background
             "newsSummary": news_summary,
             "resultId": result_id
         }
-        if "verdict" in news_result:
+        if news_result and "verdict" in news_result:
             response["verdict"] = news_result.get("verdict", "uncertain")
             response["confidence"] = news_result.get("confidence", 0)
         if news_evidence:
@@ -573,100 +734,175 @@ async def analyze_audio(data: AudioAnalysisRequest, background_tasks: Background
                     "url": source.get("url", "")
                 } for source in news_evidence[:3]
             ]
+        logger.info(f"Audio analysis completed with news_score: {news_score}, result_id: {result_id}")
         return response
     except Exception as e:
-        print(f"Audio analysis error: {str(e)}")
+        logger.error(f"Error during audio analysis: {str(e)}")
         return JSONResponse(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": f"Failed to analyze audio: {str(e)}"}
         )
-    
+
 class CombinedAnalysisRequest(BaseModel):
     videoPath: str
-    audioPath: str
+    audioPath: Optional[str] = None
+    
+    class Config:
+        schema_extra = {
+            "example": {
+                "videoPath": "/tmp/video_123456.mp4",
+                "audioPath": "/tmp/audio_123456.mp3"
+            }
+        }
 
 @app.post("/analyze-combined")
 async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: BackgroundTasks):
     video_path = data.videoPath
-    if not video_path or not os.path.exists(video_path):
-        return JSONResponse(
-            status_code=400,
-            content={"error": "Invalid video path"}
-        )
     audio_path = data.audioPath
-    if audio_path and not os.path.exists(audio_path):
+    if not video_path:
         return JSONResponse(
-            status_code=400,
-            content={"error": "Invalid audio path"}
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Missing video path"}
         )
+    if not os.path.exists(video_path):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Video file not found at specified path"}
+        )
+    if not os.path.isfile(video_path):
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Video path is not a file"}
+        )
+    if os.path.getsize(video_path) == 0:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Video file is empty"}
+        )
+    if audio_path:
+        if not os.path.exists(audio_path):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"error": "Audio file not found at specified path"}
+            )
+        if not os.path.isfile(audio_path):
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"error": "Audio path is not a file"}
+            )
+        if os.path.getsize(audio_path) == 0:
+            return JSONResponse(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                content={"error": "Audio file is empty"}
+            )
     try:
         output_path = video_path.replace(".mp4", "_output.mp4")
-        fake_score = run(video_path, output_path)
-        if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+        logger.info(f"Starting video analysis for {video_path}")
+        try:
+            fake_score = run(video_path, output_path)
+        except Exception as e:
+            logger.error(f"Video analysis failed: {str(e)}")
             return JSONResponse(
-                status_code=500,
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"error": f"Video analysis failed: {str(e)}"}
+            )
+        if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+            logger.error(f"No output video generated at {output_path}")
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"error": "Video analysis failed: No output video generated"}
             )
         news_score = 0
         news_summary = "Could not analyze audio content"
         news_evidence = []
-        news_result = None
+        news_result = {}
+        audio_extracted = False
+        audio_used_path = None
         if has_news_features and transcribe_audio and perform_search and judge_content:
             try:
                 if not audio_path:
                     audio_path = video_path.replace(".mp4", ".wav")
-                    audio_extracted = extract_audio(video_path, audio_path) if extract_audio else False
+                    logger.info(f"Extracting audio from video to {audio_path}")
+                    if extract_audio:
+                        audio_extracted = extract_audio(video_path, audio_path)
+                    else:
+                        logger.warning("Audio extraction function not available")
+                        audio_extracted = False
                 else:
                     audio_extracted = True
                 if audio_extracted or os.path.exists(audio_path):
-                    print(f"Transcribing audio: {audio_path}")
+                    audio_used_path = audio_path
+                    logger.info(f"Transcribing audio from {audio_path}")
                     transcription = transcribe_audio(audio_path)
                     if transcription:
-                        print("Generating search query from transcription")
-                        from web.utils.judge import generate_search_query
-                        search_query = generate_search_query(transcription, GEMINI_API_KEY)
-                        print(f"Searching for relevant information with query: {search_query}")
-                        search_results = perform_search(search_query, TAVILY_API_KEY)
-                        print("Judging content authenticity")
-                        news_result = judge_content(transcription, search_results, GEMINI_API_KEY)
-                        print(f"News result: {json.dumps(news_result, indent=2)}")
-                        if "verdict" in news_result:
-                            verdict_scores = {
-                                "authentic": 100,
-                                "misleading": 50, 
-                                "fake": 0,
-                                "uncertain": 25
-                            }
-                            verdict = news_result.get("verdict", "uncertain")
-                            news_score = news_result.get("confidence", verdict_scores.get(verdict, 0))
-                            news_summary = news_result.get("reasoning", "No reasoning provided")
-                            news_evidence = news_result.get("sources", [])
+                        if not GEMINI_API_KEY:
+                            logger.warning("Gemini API key not configured")
+                            news_summary = "News analysis unavailable: Gemini API key not configured"
+                        elif not TAVILY_API_KEY:
+                            logger.warning("Tavily API key not configured")
+                            news_summary = "News analysis unavailable: Tavily API key not configured"
                         else:
-                            news_score = news_result.get("score", 0)
-                            news_summary = news_result.get("summary", "No summary provided")
-                            news_evidence = news_result.get("evidence", [])
+                            from web.utils.judge import generate_search_query
+                            logger.info("Generating search query from transcription")
+                            search_query = generate_search_query(transcription, GEMINI_API_KEY)
+                            if search_query:
+                                logger.info(f"Performing search with query: {search_query}")
+                                search_results = perform_search(search_query, TAVILY_API_KEY)
+                                if search_results:
+                                    logger.info("Analyzing content credibility")
+                                    news_result = judge_content(transcription, search_results, GEMINI_API_KEY)
+                                    if "verdict" in news_result:
+                                        verdict_scores = {
+                                            "authentic": 100,
+                                            "misleading": 50, 
+                                            "fake": 0,
+                                            "uncertain": 25
+                                        }
+                                        verdict = news_result.get("verdict", "uncertain")
+                                        news_score = news_result.get("confidence", verdict_scores.get(verdict, 0))
+                                        news_summary = news_result.get("reasoning", "No reasoning provided")
+                                        news_evidence = news_result.get("sources", [])
+                                    else:
+                                        news_score = news_result.get("score", 0)
+                                        news_summary = news_result.get("summary", "No summary provided")
+                                        news_evidence = news_result.get("evidence", [])
+                                else:
+                                    logger.warning("No search results returned")
+                                    news_summary = "Could not find relevant information to verify content"
+                            else:
+                                logger.warning("Failed to generate search query")
+                                news_summary = "Could not analyze content: Failed to generate search query"
+                    else:
+                        logger.warning(f"Failed to transcribe audio from {audio_path}")
+                        news_summary = "Could not transcribe audio content"
+                else:
+                    logger.warning("No valid audio available for processing")
+                    news_summary = "No audio content available for analysis"
             except Exception as e:
-                print(f"Audio processing error: {str(e)}")
-                news_summary = f"Error analyzing audio: {str(e)}"
+                logger.error(f"Audio processing error: {str(e)}")
+                news_summary = f"Audio analysis error: {str(e)}"
         else:
-            print("Audio processing skipped - required components not available")
+            logger.warning("News features not available")
+            news_summary = "News analysis features not available"
         result_id = str(uuid.uuid4())
         analysis_results[result_id] = {
             "output_path": output_path,
-            "audio_path": audio_path if (("audio_extracted" in locals() and audio_extracted) or data.audioPath) else None,
+            "audio_path": audio_used_path if audio_used_path and os.path.exists(audio_used_path) else None,
             "fake_score": fake_score,
             "news_score": news_score,
             "news_summary": news_summary,
             "news_evidence": news_evidence,
             "timestamp": time.time()
         }
+
         def delete_input_video():
             try:
                 if os.path.exists(video_path):
                     os.unlink(video_path)
+                    logger.info(f"Deleted input video: {video_path}")
             except Exception as e:
-                print(f"Failed to delete input video: {str(e)}")
-            
+                logger.error(f"Failed to delete input video {video_path}: {str(e)}")
+        
         background_tasks.add_task(delete_input_video)
         response = {
             "fakeScore": fake_score,
@@ -677,7 +913,6 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
         if news_result and "verdict" in news_result:
             response["verdict"] = news_result.get("verdict", "uncertain")
             response["confidence"] = news_result.get("confidence", 0)
-        
         if news_evidence:
             response["evidence"] = [
                 {
@@ -685,31 +920,14 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
                     "url": source.get("url", "")
                 } for source in news_evidence[:3]
             ]
+        logger.info(f"Combined analysis completed with fake_score: {fake_score}, news_score: {news_score}, result_id: {result_id}")
         return response
     except Exception as e:
+        logger.error(f"Error during combined analysis: {str(e)}")
         return JSONResponse(
-            status_code=500,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"error": f"Failed to analyze content: {str(e)}"}
         )
-
-@app.get("/")
-async def root():
-    """Root endpoint returning API information"""
-    return {
-        "name": "AI-Generated Video Detection Tool API",
-        "version": "1.0.0",
-        "endpoints": [
-            "/download-video - Download video from URL",
-            "/download-audio - Download audio from URL",
-            "/analyze - Analyze video for AI manipulation",
-            "/analyze-audio - Analyze audio content for authenticity",
-            "/analyze-combined - Analyze video and audio content",
-            "/view/{result_id} - View analysis results",
-            "/video/{result_id} - Stream processed video",
-            "/audio/{result_id} - Stream processed audio",
-            "/news/* - News verification endpoints" if has_news_features else "News verification not available"
-        ]
-    }
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5001)
