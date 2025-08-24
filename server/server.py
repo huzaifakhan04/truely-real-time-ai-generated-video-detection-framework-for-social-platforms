@@ -42,14 +42,10 @@ current_directory = os.path.dirname(os.path.abspath(__file__))
 if current_directory not in sys.path:
     sys.path.append(current_directory)
 
-router = None
-extract_audio = None
 transcribe_audio = None
 perform_search = None
 judge_content = None
 try:
-    from web.routes import router
-    from web.utils.audio import extract_audio
     from web.utils.transcribe import transcribe_audio
     from web.utils.search import perform_search
     from web.utils.judge import judge_content
@@ -75,13 +71,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-if router and has_news_features:
-    try:
-        app.include_router(router, prefix="/news", tags=["news"])
-    except Exception as e:
-        logger.critical(f"Failed to include news router: {str(e)}")
-        raise ImportError(f"Failed to include news router: {e}")
 
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 if os.path.exists(templates_dir):
@@ -445,50 +434,35 @@ async def download_combined(video_url: Optional[str] = None, audio_format: str =
         )
     video_path = video_response["videoPath"]
     audio_path = video_path.replace(".mp4", f".{audio_format}")
-    audio_extracted = False
     try:
-        if has_news_features and extract_audio:
-            try:
-                logger.info(f"Extracting audio from video to {audio_path}")
-                audio_extracted = extract_audio(video_path, audio_path)
-                if audio_extracted:
-                    logger.info(f"Successfully extracted audio to {audio_path}")
-                else:
-                    logger.warning(f"Failed to extract audio from {video_path}")
-            except Exception as e:
-                logger.error(f"Audio extraction error: {str(e)}")
-        if not audio_extracted or not os.path.exists(audio_path) or os.path.getsize(audio_path) == 0:
-            logger.info(f"Downloading audio directly from URL: {video_url}")
-            url = video_url
-            if os.path.exists(audio_path):
-                audio_path = video_path.replace(".mp4", f"_download.{audio_format}")
-                logger.info(f"Using alternative audio path: {audio_path}")
-            cmd = [
-                "yt-dlp",
-                "--verbose",
-                "--force-overwrites",
-                "--no-cache-dir",
-                "--no-continue",
-                "-x",
-                "--audio-format", audio_format,
-                "--audio-quality", "0",
-                "-o", audio_path,
-                url
-            ]
-            try:
-                _ = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=120)
-                logger.info(f"Downloaded audio to {audio_path}")
-            except subprocess.TimeoutExpired:
-                logger.error(f"Audio download timed out for URL: {url}")
-                return JSONResponse(
-                    status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-                    content={"error": "Audio download timed out"}
-                )
+        logger.info(f"Downloading audio directly from URL: {video_url}")
+        url = video_url
+        cmd = [
+            "yt-dlp",
+            "--verbose",
+            "--force-overwrites",
+            "--no-cache-dir",
+            "--no-continue",
+            "-x",
+            "--audio-format", audio_format,
+            "--audio-quality", "0",
+            "-o", audio_path,
+            url
+        ]
+        try:
+            _ = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=120)
+            logger.info(f"Downloaded audio to {audio_path}")
+        except subprocess.TimeoutExpired:
+            logger.error(f"Audio download timed out for URL: {url}")
+            return JSONResponse(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                content={"error": "Audio download timed out"}
+            )
         if not os.path.exists(audio_path) or os.path.getsize(audio_path) == 0:
-            logger.error("Failed to obtain valid audio file after multiple attempts")
+            logger.error("Failed to obtain valid audio file")
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"error": "Failed to download/extract audio after multiple attempts"}
+                content={"error": "Failed to download audio"}
             )
         video_id = str(uuid.uuid4())
         audio_id = str(uuid.uuid4())
@@ -816,71 +790,59 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
         news_summary = "Could not analyze audio content"
         news_evidence = []
         news_result = {}
-        audio_extracted = False
         audio_used_path = None
-        if has_news_features and transcribe_audio and perform_search and judge_content:
+        if has_news_features and transcribe_audio and perform_search and judge_content and audio_path:
             try:
-                if not audio_path:
-                    audio_path = video_path.replace(".mp4", ".wav")
-                    logger.info(f"Extracting audio from video to {audio_path}")
-                    if extract_audio:
-                        audio_extracted = extract_audio(video_path, audio_path)
+                audio_used_path = audio_path
+                logger.info(f"Transcribing audio from {audio_path}")
+                transcription = transcribe_audio(audio_path)
+                if transcription:
+                    if not GEMINI_API_KEY:
+                        logger.warning("Gemini API key not configured")
+                        news_summary = "News analysis unavailable: Gemini API key not configured"
+                    elif not TAVILY_API_KEY:
+                        logger.warning("Tavily API key not configured")
+                        news_summary = "News analysis unavailable: Tavily API key not configured"
                     else:
-                        logger.warning("Audio extraction function not available")
-                        audio_extracted = False
-                else:
-                    audio_extracted = True
-                if audio_extracted or os.path.exists(audio_path):
-                    audio_used_path = audio_path
-                    logger.info(f"Transcribing audio from {audio_path}")
-                    transcription = transcribe_audio(audio_path)
-                    if transcription:
-                        if not GEMINI_API_KEY:
-                            logger.warning("Gemini API key not configured")
-                            news_summary = "News analysis unavailable: Gemini API key not configured"
-                        elif not TAVILY_API_KEY:
-                            logger.warning("Tavily API key not configured")
-                            news_summary = "News analysis unavailable: Tavily API key not configured"
-                        else:
-                            from web.utils.judge import generate_search_query
-                            logger.info("Generating search query from transcription")
-                            search_query = generate_search_query(transcription, GEMINI_API_KEY)
-                            if search_query:
-                                logger.info(f"Performing search with query: {search_query}")
-                                search_results = perform_search(search_query, TAVILY_API_KEY)
-                                if search_results:
-                                    logger.info("Analyzing content credibility")
-                                    news_result = judge_content(transcription, search_results, GEMINI_API_KEY)
-                                    if "verdict" in news_result:
-                                        verdict_scores = {
-                                            "authentic": 100,
-                                            "misleading": 50, 
-                                            "fake": 0,
-                                            "uncertain": 25
-                                        }
-                                        verdict = news_result.get("verdict", "uncertain")
-                                        news_score = news_result.get("confidence", verdict_scores.get(verdict, 0))
-                                        news_summary = news_result.get("reasoning", "No reasoning provided")
-                                        news_evidence = news_result.get("sources", [])
-                                    else:
-                                        news_score = news_result.get("score", 0)
-                                        news_summary = news_result.get("summary", "No summary provided")
-                                        news_evidence = news_result.get("evidence", [])
+                        from web.utils.judge import generate_search_query
+                        logger.info("Generating search query from transcription")
+                        search_query = generate_search_query(transcription, GEMINI_API_KEY)
+                        if search_query:
+                            logger.info(f"Performing search with query: {search_query}")
+                            search_results = perform_search(search_query, TAVILY_API_KEY)
+                            if search_results:
+                                logger.info("Analyzing content credibility")
+                                news_result = judge_content(transcription, search_results, GEMINI_API_KEY)
+                                if "verdict" in news_result:
+                                    verdict_scores = {
+                                        "authentic": 100,
+                                        "misleading": 50, 
+                                        "fake": 0,
+                                        "uncertain": 25
+                                    }
+                                    verdict = news_result.get("verdict", "uncertain")
+                                    news_score = news_result.get("confidence", verdict_scores.get(verdict, 0))
+                                    news_summary = news_result.get("reasoning", "No reasoning provided")
+                                    news_evidence = news_result.get("sources", [])
                                 else:
-                                    logger.warning("No search results returned")
-                                    news_summary = "Could not find relevant information to verify content"
+                                    news_score = news_result.get("score", 0)
+                                    news_summary = news_result.get("summary", "No summary provided")
+                                    news_evidence = news_result.get("evidence", [])
                             else:
-                                logger.warning("Failed to generate search query")
-                                news_summary = "Could not analyze content: Failed to generate search query"
-                    else:
-                        logger.warning(f"Failed to transcribe audio from {audio_path}")
-                        news_summary = "Could not transcribe audio content"
+                                logger.warning("No search results returned")
+                                news_summary = "Could not find relevant information to verify content"
+                        else:
+                            logger.warning("Failed to generate search query")
+                            news_summary = "Could not analyze content: Failed to generate search query"
                 else:
-                    logger.warning("No valid audio available for processing")
-                    news_summary = "No audio content available for analysis"
+                    logger.warning(f"Failed to transcribe audio from {audio_path}")
+                    news_summary = "Could not transcribe audio content"
             except Exception as e:
                 logger.error(f"Audio processing error: {str(e)}")
                 news_summary = f"Audio analysis error: {str(e)}"
+        elif not audio_path:
+            logger.warning("No audio path provided for news analysis")
+            news_summary = "No audio content provided for analysis"
         else:
             logger.warning("News features not available")
             news_summary = "News analysis features not available"
