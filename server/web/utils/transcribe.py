@@ -1,6 +1,10 @@
+import os
 from typing import Optional
 from groq import Groq
-from web.config import GROQ_API_KEY
+from dotenv import load_dotenv
+
+load_dotenv()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
 def transcribe_audio(audio_path: str, language: Optional[str] = None) -> str:
     client = Groq(api_key=GROQ_API_KEY)

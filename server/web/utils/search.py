@@ -7,7 +7,7 @@ from typing import (
 import httpx
 
 TAVILY_SEARCH_URL = "https://api.tavily.com/search"
-REPUTABLE_DOMAINS = [
+TRUSTED_DOMAINS = [
     "cnn.com",
     "bbc.com", 
     "cbsnews.com",
@@ -30,7 +30,7 @@ def perform_search(
         "include_answer": False,
         "include_raw_content": False,
     }
-    domains = include_domains or REPUTABLE_DOMAINS
+    domains = include_domains or TRUSTED_DOMAINS
     if domains:
         body["include_domains"] = domains
     with httpx.Client(timeout=60) as client:

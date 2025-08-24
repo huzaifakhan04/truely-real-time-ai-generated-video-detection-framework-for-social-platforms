@@ -15,6 +15,7 @@ from typing import (
     Dict,
     Any
 )
+from dotenv import load_dotenv
 from fastapi import (
     FastAPI,
     Request,
@@ -29,8 +30,11 @@ from fastapi.responses import (
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from web.config import TAVILY_API_KEY, GEMINI_API_KEY
 from model import run
+
+load_dotenv()
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 if current_dir not in sys.path:

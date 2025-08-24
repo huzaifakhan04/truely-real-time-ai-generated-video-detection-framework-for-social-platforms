@@ -2,9 +2,9 @@ import os
 import uuid
 import subprocess
 
-def download_audio(video_url: str, tmp_dir: str, max_secs: int) -> str:
+def download_audio(video_url: str, temporary_directory: str, max_secs: int) -> str:
     audio_id = uuid.uuid4().hex
-    out_tpl = os.path.join(tmp_dir, f"auth_{audio_id}.%(ext)s")
+    out_tpl = os.path.join(temporary_directory, f"auth_{audio_id}.%(ext)s")
     cmd = [
         "yt-dlp",
         "--quiet",

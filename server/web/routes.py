@@ -1,18 +1,12 @@
 import os
 import tempfile
+from dotenv import load_dotenv
 from fastapi import (
     FastAPI,
     HTTPException
 )
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import APIRouter
-from web.config import (
-    GROQ_API_KEY,
-    TAVILY_API_KEY,
-    GEMINI_API_KEY,
-    AUTH_MAX_DURATION_SECONDS,
-    AUTH_TMP_DIR,
-)
 from web.models import (
     VerifyNewsRequest,
     VerifyNewsResponse,
@@ -25,6 +19,13 @@ from web.utils.processing import (
     analyze_with_gemini,
     prepare_sources,
 )
+
+load_dotenv()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+API_TIMEOUT_LIMIT = 300
+TEMPORARY_DIRECTORY = "/tmp"
 
 router = APIRouter()
 app = FastAPI(title="Authenticity API", version="0.1.0")
@@ -39,13 +40,13 @@ app.add_middleware(
 @app.post("/verify_news", response_model=VerifyNewsResponse)
 def verify_news(payload: VerifyNewsRequest) -> VerifyNewsResponse:
     if not GROQ_API_KEY or not TAVILY_API_KEY or not GEMINI_API_KEY:
-        raise HTTPException(status_code=500, detail="Server misconfigured: missing API keys")
-    tmp_dir = AUTH_TMP_DIR or tempfile.gettempdir()
+        raise HTTPException(status_code=500, detail="Server configuration error: Missing API keys")
+    tmp_dir = TEMPORARY_DIRECTORY or tempfile.gettempdir()
     audio_path = None
     video_url = str(payload.video_url)
     try:
         transcript, download_time, transcribe_time = download_and_transcribe(
-            video_url, tmp_dir, AUTH_MAX_DURATION_SECONDS, GROQ_API_KEY
+            video_url, tmp_dir, API_TIMEOUT_LIMIT, GROQ_API_KEY
         )
         news_results, search_time = search_and_filter_sources(transcript, TAVILY_API_KEY, GEMINI_API_KEY)
         filtered_results, scored_results = score_and_filter_similarity(

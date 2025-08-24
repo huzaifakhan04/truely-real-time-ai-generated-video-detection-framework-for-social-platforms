@@ -14,9 +14,9 @@ from web.utils.judge import (
 )
 from web.models import Source
 
-AUTH_SIMILARITY_MIN = 0.3
-AUTH_CONFIDENCE_REAL_THRESHOLD = 70
-AUTH_CONFIDENCE_UNCERTAIN_MIN = 40
+MINIMUM_SIMILARITY = 0.3
+CONFIDENCE_THRESHOLD = 70
+MINIMUM_CONFIDENCE = 40
 
 def download_and_transcribe(video_url: str, tmp_dir: str, max_duration: int, groq_api_key: str) -> Tuple[str, float, float]:
     t0 = time.monotonic()
@@ -60,7 +60,7 @@ def score_and_filter_similarity(transcript: str, news_results: List[Dict], gemin
         scored_results = [(0.1, result) for result in news_results]
     if scored_results:
         scored_results.sort(key=lambda x: x[0], reverse=True)
-        filtered_results = [result for similarity, result in scored_results if similarity >= AUTH_SIMILARITY_MIN]
+        filtered_results = [result for similarity, result in scored_results if similarity >= MINIMUM_SIMILARITY]
     else:
         filtered_results = news_results
         scored_results = [(0.1, result) for result in news_results]
@@ -74,9 +74,9 @@ def analyze_with_gemini(transcript: str, filtered_results: List[Dict], scored_re
     raw_verdict = str(judgment.get("verdict", "uncertain")).lower()
     raw_confidence = int(judgment.get("confidence", 50))
     reasoning = judgment.get("reasoning", "")
-    if raw_confidence >= AUTH_CONFIDENCE_REAL_THRESHOLD:
+    if raw_confidence >= CONFIDENCE_THRESHOLD:
         final_verdict = "authentic"
-    elif raw_confidence >= AUTH_CONFIDENCE_UNCERTAIN_MIN:
+    elif raw_confidence >= MINIMUM_CONFIDENCE:
         final_verdict = "uncertain"
     else:
         final_verdict = "fake"
