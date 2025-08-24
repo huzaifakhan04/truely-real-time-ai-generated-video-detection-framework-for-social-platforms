@@ -411,11 +411,83 @@
                 color: var(--primary-color);
             }
             
+            .combined-progress {
+                stroke: var(--primary-color);
+            }
+            
+            .combined-score-value {
+                color: var(--primary-color);
+            }
+            
+            .high-score .news-progress, .high-score .combined-progress {
+                stroke: var(--success-color);
+            }
+            
+            .high-score .news-score-value, .high-score .combined-score-value {
+                color: var(--success-color);
+            }
+            
+            .medium-score .news-progress, .medium-score .combined-progress {
+                stroke: var(--warning-color);
+            }
+            
+            .medium-score .news-score-value, .medium-score .combined-score-value {
+                color: var(--warning-color);
+            }
+            
+            .low-score .news-progress, .low-score .combined-progress {
+                stroke: var(--error-color);
+            }
+            
+            .low-score .news-score-value, .low-score .combined-score-value {
+                color: var(--error-color);
+            }
+            
+            .authentic-verdict .news-progress {
+                stroke: var(--success-color);
+            }
+            
+            .authentic-verdict .news-score-value {
+                color: var(--success-color);
+            }
+            
+            .misleading-verdict .news-progress {
+                stroke: var(--warning-color);
+            }
+            
+            .misleading-verdict .news-score-value {
+                color: var(--warning-color);
+            }
+            
+            .fake-verdict .news-progress {
+                stroke: var(--error-color);
+            }
+            
+            .fake-verdict .news-score-value {
+                color: var(--error-color);
+            }
+            
+            .text-success {
+                color: var(--success-color);
+            }
+            
+            .text-warning {
+                color: var(--warning-color);
+            }
+            
+            .text-danger {
+                color: var(--error-color);
+            }
+            
+            .content-analysis-container {
+                margin: 2rem 0;
+            }
+            
             .content-summary {
                 background: var(--info-bg);
                 border-radius: var(--border-radius-md);
                 padding: 1.5rem;
-                margin: 2rem 0;
+                margin-bottom: 1.5rem;
                 border-left: 4px solid var(--info-color);
                 position: relative;
             }
@@ -508,6 +580,24 @@
                 color: var(--text-tertiary);
                 word-break: break-all;
                 font-family: monospace;
+            }
+            
+            .evidence-snippet {
+                color: var(--text-secondary);
+                margin-bottom: 0.5rem;
+                font-size: 0.875rem;
+                line-height: 1.5;
+                padding: 0.75rem;
+                background: var(--background-subtle);
+                border-radius: var(--border-radius);
+                border-left: 3px solid var(--primary-light);
+            }
+            
+            .evidence-section {
+                background: var(--background-alt);
+                border-radius: var(--border-radius-md);
+                padding: 1rem;
+                margin-top: 1.5rem;
             }
             
             @media (max-width: 768px) {
@@ -687,16 +777,49 @@
                 <h1>AI-Generated Video Detection Report</h1>
                 <p class="header-subtitle">Comprehensive Analysis Results</p>
             </div>
-            <div class="header-content">
-                <div class="logo">
-                    <img src="/static/icon48.png" alt="Truely logo">
-                    <span class="logo-text">Truely</span>
-                </div>
-                <h1>Video Analysis Report</h1>
-                <p class="header-subtitle">Comprehensive detection of AI-generated content</p>
-            </div>
         </div>
         <div class="container">
+            {% if news_score is defined %}
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-balance-scale"></i> Combined Analysis</h2>
+                </div>
+                <div class="card-body">
+                    <div class="score-container">
+                        {% set combined_score = ((fake_score + news_score) / 2)|round|int %}
+                        <div class="score-ring combined-score-ring {% if combined_score > 70 %}high-score{% elif combined_score > 40 %}medium-score{% else %}low-score{% endif %}">
+                            <svg viewBox="0 0 100 100">
+                                <circle class="score-circle bg" cx="50" cy="50" r="42" />
+                                <circle class="score-circle progress combined-progress" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="{{ 263.89 * (100 - combined_score) / 100 }}" />
+                            </svg>
+                            <div class="score-text">
+                                <div class="score-value combined-score-value">{{ combined_score }}%</div>
+                                <div class="score-label">Overall Score</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="combined-verdict">
+                        <h3><i class="fas fa-balance-scale"></i> Combined Assessment</h3>
+                        <p>
+                            Based on our combined video and audio analysis:
+                            {% if fake_score > 60 and news_score < 40 %}
+                            <strong>High Concern:</strong> This content shows both visual manipulation signs and factual inaccuracies in the audio content.
+                            {% elif fake_score > 60 and news_score >= 40 %}
+                            <strong>Mixed Assessment:</strong> While the visual content shows signs of AI manipulation, the factual content may still contain accurate information.
+                            {% elif fake_score <= 60 and news_score < 40 %}
+                            <strong>Mixed Assessment:</strong> While the video appears visually authentic, the spoken content contains factual inaccuracies or misinformation.
+                            {% else %}
+                            <strong>Low Concern:</strong> Both the visual content and spoken information appear to be largely authentic and accurate.
+                            {% endif %}
+                        </p>
+                    </div>
+                    <a href="#" class="btn btn-outline" onclick="window.print()">
+                        <i class="fas fa-download"></i>
+                        Download Report
+                    </a>
+                </div>
+            </div>
+            {% endif %}
             <div class="card">
                 <div class="card-header">
                     <h2><i class="fas fa-chart-pie"></i> Video Detection Results</h2>
@@ -775,27 +898,6 @@
                             Red bounding boxes in the video highlight frames where facial inconsistencies were detected.
                         </p>
                     </div>
-                    {% if news_score is defined %}
-                    <div class="combined-verdict">
-                        <h3><i class="fas fa-balance-scale"></i> Combined Analysis</h3>
-                        <p>
-                            Based on our combined video and audio analysis:
-                            {% if fake_score > 60 and news_score < 40 %}
-                            <strong>High Concern:</strong> This content shows both visual manipulation signs and factual inaccuracies in the audio content.
-                            {% elif fake_score > 60 and news_score >= 40 %}
-                            <strong>Mixed Assessment:</strong> While the visual content shows signs of AI manipulation, the factual content may still contain accurate information.
-                            {% elif fake_score <= 60 and news_score < 40 %}
-                            <strong>Mixed Assessment:</strong> While the video appears visually authentic, the spoken content contains factual inaccuracies or misinformation.
-                            {% else %}
-                            <strong>Low Concern:</strong> Both the visual content and spoken information appear to be largely authentic and accurate.
-                            {% endif %}
-                        </p>
-                    </div>
-                    {% endif %}
-                    <a href="#" class="btn btn-outline" onclick="window.print()">
-                        <i class="fas fa-download"></i>
-                        Download Report
-                    </a>
                 </div>
             </div>
             {% if news_score is defined %}
@@ -805,25 +907,52 @@
                 </div>
                 <div class="card-body">
                     <div class="score-container">
-                        <div class="score-ring news-score-ring">
+                        {% if verdict == 'authentic' %}
+                            {% set color_class = 'high-score' if confidence > 70 else 'medium-score' %}
+                            {% set displayed_score = confidence %}
+                            {% set display_label = 'Credibility' %}
+                        {% elif verdict == 'misleading' %}
+                            {% set color_class = 'medium-score' %}
+                            {% set displayed_score = 100 - confidence %}
+                            {% set display_label = 'Accuracy' %}
+                        {% elif verdict == 'fake' %}
+                            {% set color_class = 'low-score' %}
+                            {% set displayed_score = 100 - confidence %}
+                            {% set display_label = 'Accuracy' %}
+                        {% else %}
+                            {% set color_class = 'medium-score' %}
+                            {% set displayed_score = confidence if confidence is defined else news_score %}
+                            {% set display_label = 'Confidence' %}
+                        {% endif %}
+                        <div class="score-ring news-score-ring {{ color_class }} {{ verdict }}-verdict">
                             <svg viewBox="0 0 100 100">
                                 <circle class="score-circle bg" cx="50" cy="50" r="42" />
-                                <circle class="score-circle progress news-progress" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="{{ 263.89 * (100 - news_score) / 100 }}" />
+                                <circle class="score-circle progress news-progress" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="{{ 263.89 * (100 - displayed_score) / 100 }}" />
                             </svg>
                             <div class="score-text">
-                                <div class="score-value news-score-value">{{ news_score }}%</div>
-                                <div class="score-label">Credibility</div>
+                                <div class="score-value news-score-value">{{ displayed_score }}%</div>
+                                <div class="score-label">{{ display_label }}</div>
                             </div>
                         </div>
                     </div>
                     <div class="grid">
                         <div class="stat-card">
-                            <div class="stat-icon {% if news_score > 70 %}success{% elif news_score > 40 %}warning{% else %}error{% endif %}">
+                            {% if verdict == 'authentic' %}
+                                <div class="stat-icon success">
+                            {% elif verdict == 'misleading' %}
+                                <div class="stat-icon warning">
+                            {% elif verdict == 'fake' %}
+                                <div class="stat-icon error">
+                            {% else %}
+                                <div class="stat-icon warning">
+                            {% endif %}
                                 <i class="fas fa-newspaper"></i>
                             </div>
                             <div class="stat-content">
-                                <div class="stat-label">Content Credibility</div>
-                                <div class="stat-value">{{ news_score }}%</div>
+                                <div class="stat-label">Content Assessment</div>
+                                <div class="stat-value {% if verdict == 'authentic' %}text-success{% elif verdict == 'misleading' %}text-warning{% elif verdict == 'fake' %}text-danger{% endif %}">
+                                    {{ verdict|title if verdict is defined else 'Unknown' }}
+                                </div>
                             </div>
                         </div>
                         {% if verdict is defined %}
@@ -833,7 +962,7 @@
                             </div>
                             <div class="stat-content">
                                 <div class="stat-label">Content Verdict</div>
-                                <div class="stat-value">
+                                <div class="stat-value {% if verdict == 'authentic' %}text-success{% elif verdict == 'misleading' %}text-warning{% elif verdict == 'fake' %}text-danger{% endif %}">
                                     {{ verdict|title }}
                                 </div>
                             </div>
@@ -841,41 +970,67 @@
                         {% endif %}
                         {% if confidence is defined %}
                         <div class="stat-card">
-                            <div class="stat-icon {% if confidence > 70 %}success{% elif confidence > 40 %}warning{% else %}error{% endif %}">
-                                <i class="fas fa-percent"></i>
-                            </div>
-                            <div class="stat-content">
-                                <div class="stat-label">Verdict Confidence</div>
-                                <div class="stat-value">{{ confidence }}%</div>
-                            </div>
+                            {% if verdict == 'authentic' %}
+                                <div class="stat-icon {% if confidence > 70 %}success{% elif confidence > 40 %}warning{% else %}error{% endif %}">
+                                    <i class="fas fa-percent"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Credibility Score</div>
+                                    <div class="stat-value">{{ confidence }}%</div>
+                                </div>
+                            {% elif verdict == 'misleading' or verdict == 'fake' %}
+                                <div class="stat-icon {% if confidence > 70 %}error{% elif confidence > 40 %}warning{% else %}success{% endif %}">
+                                    <i class="fas fa-percent"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Deception Confidence</div>
+                                    <div class="stat-value">{{ confidence }}%</div>
+                                </div>
+                            {% else %}
+                                <div class="stat-icon {% if confidence > 70 %}success{% elif confidence > 40 %}warning{% else %}error{% endif %}">
+                                    <i class="fas fa-percent"></i>
+                                </div>
+                                <div class="stat-content">
+                                    <div class="stat-label">Verdict Confidence</div>
+                                    <div class="stat-value">{{ confidence }}%</div>
+                                </div>
+                            {% endif %}
                         </div>
                         {% endif %}
                     </div>
                     {% if news_summary is defined and news_summary %}
-                    <div class="content-summary">
-                        <h3><i class="fas fa-align-left"></i> Summary</h3>
-                        <div class="summary-text">
-                            <p>{{ news_summary }}</p>
-                        </div>
-                    </div>
-                    {% endif %}
-                    
-                    {% if evidence is defined and evidence %}
-                    <div class="evidence-section">
-                        <h3><i class="fas fa-link"></i> Referenced Sources</h3>
-                        <div class="evidence-list">
-                            {% for source in evidence %}
-                            <div class="evidence-item">
-                                <div class="evidence-icon">
-                                    <i class="fas fa-external-link-alt"></i>
-                                </div>
-                                <div class="evidence-content">
-                                    <a href="{{ source.url }}" target="_blank" class="evidence-title">{{ source.title }}</a>
-                                    <div class="evidence-url">{{ source.url }}</div>
-                                </div>
+                    <div class="content-analysis-container">
+                        <div class="content-summary">
+                            <h3><i class="fas fa-align-left"></i> Content Analysis</h3>
+                            <div class="summary-text">
+                                <p>{{ news_summary }}</p>
                             </div>
-                            {% endfor %}
                         </div>
+                        {% if evidence is defined and evidence %}
+                        <div class="evidence-section">
+                            <h3><i class="fas fa-link"></i> Referenced Sources</h3>
+                            <div class="evidence-list">
+                                {% for source in evidence %}
+                                <div class="evidence-item">
+                                    <div class="evidence-icon">
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </div>
+                                    <div class="evidence-content">
+                                        <a href="{{ source.url }}" target="_blank" class="evidence-title">{{ source.title }}</a>
+                                        <div class="evidence-snippet">
+                                            {% if source.snippet is defined %}
+                                            {{ source.snippet }}
+                                            {% else %}
+                                            External source supporting the analysis
+                                            {% endif %}
+                                        </div>
+                                        <div class="evidence-url">{{ source.url }}</div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
                     </div>
                     {% endif %}
                 </div>

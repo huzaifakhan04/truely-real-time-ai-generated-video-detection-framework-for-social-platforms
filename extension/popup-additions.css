@@ -42,13 +42,23 @@
   font-weight: 500;
   font-size: 13px;
   color: var(--primary-color);
-  margin-bottom: 2px;
+  margin-bottom: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Combined verdict section styles */
+.evidence-snippet {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  line-height: 1.4;
+  background-color: var(--background-subtle);
+  border-radius: var(--border-radius);
+  padding: 6px;
+  border-left: 2px solid var(--primary-light);
+}
+
 .combined-verdict {
   margin-top: 15px;
   padding: 12px 15px;
@@ -57,13 +67,64 @@
   border-left: 4px solid var(--primary-color);
 }
 
+.high-credibility {
+  color: var(--success-color);
+}
+
+.medium-credibility {
+  color: var(--warning-color);
+}
+
+.low-credibility {
+  color: var(--error-color);
+}
+
+.high-concern {
+  border-left-color: var(--error-color);
+}
+
+.medium-concern {
+  border-left-color: var(--warning-color);
+}
+
+.low-concern {
+  border-left-color: var(--success-color);
+}
+
+.authentic-verdict .news-progress,
+.authentic-verdict .credibility-score {
+  color: var(--success-color);
+}
+
+.misleading-verdict .news-progress,
+.misleading-verdict .credibility-score {
+  color: var(--warning-color);
+}
+
+.fake-verdict .news-progress,
+.fake-verdict .credibility-score {
+  color: var(--error-color);
+}
+
+.verdict-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
 .combined-verdict h3 {
   display: flex;
   align-items: center;
   margin-top: 0;
-  margin-bottom: 8px;
+  margin-bottom: 0;
   font-size: 16px;
   color: var(--text-primary);
+}
+
+.combined-score {
+  font-weight: bold;
+  font-size: 16px;
 }
 
 .combined-verdict h3 i {

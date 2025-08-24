@@ -144,6 +144,15 @@ document.addEventListener("DOMContentLoaded", function() {
       );
     }
 
+    function updateCredibilityScore(score) {
+      const adjustedScore = 100 - score;
+      const credibilityValueElem = document.getElementById("credibility-score");
+      if (credibilityValueElem) {
+        credibilityValueElem.textContent = `${adjustedScore}%`;
+        credibilityValueElem.style.color = adjustedScore < 50 ? "red" : "green";
+      }
+    }
+
     function displayResults(analysisResponse) {
       loadingStateDiv.classList.add("hidden");
       resultStateDiv.classList.remove("hidden");
@@ -161,30 +170,27 @@ document.addEventListener("DOMContentLoaded", function() {
       if (newsSection) {
         if (analysisResponse.newsSummary && analysisResponse.newsSummary !== "No audio analysis available") {
           newsSection.classList.remove("hidden");
-          const credibilityValueElem = document.getElementById("credibility-score");
-          if (credibilityValueElem) {
-            credibilityValueElem.textContent = `${newsScore}%`;
-          }
+          updateCredibilityScore(newsScore);
           const verdictElem = document.getElementById("content-verdict");
           if (verdictElem && analysisResponse.verdict) {
             let verdictText = "Unknown";
-            let verdictClass = "medium";
+            let verdictClass = "";
             switch(analysisResponse.verdict.toLowerCase()) {
               case "authentic":
                 verdictText = "Authentic";
-                verdictClass = "low";
+                verdictClass = "high-credibility";
                 break;
               case "misleading":
                 verdictText = "Misleading";
-                verdictClass = "medium";
+                verdictClass = "medium-credibility";
                 break;
               case "fake":
                 verdictText = "Fake";
-                verdictClass = "high";
+                verdictClass = "low-credibility";
                 break;
               case "uncertain":
                 verdictText = "Uncertain";
-                verdictClass = "medium";
+                verdictClass = "medium-credibility";
                 break;
             }
             verdictElem.textContent = verdictText;
@@ -205,17 +211,36 @@ document.addEventListener("DOMContentLoaded", function() {
       const combinedVerdictSection = document.getElementById("combined-verdict");
       const combinedVerdictText = document.getElementById("combined-verdict-text");
       if (combinedVerdictSection && combinedVerdictText && analysisResponse.newsScore) {
+        const combinedScore = Math.round((fakeScore + analysisResponse.newsScore) / 2);
         let verdictMessage = "";
+        let verdictClass = "";
+        let concernLevel = "";
         if (fakeScore > 60 && newsScore < 40) {
           verdictMessage = "High Concern: This content shows both visual manipulation signs and factual inaccuracies in the audio content.";
+          concernLevel = "high-concern";
+          verdictClass = "low-credibility";
         } else if (fakeScore > 60 && newsScore >= 40) {
           verdictMessage = "Mixed Assessment: While the visual content shows signs of AI manipulation, the factual content may still contain accurate information.";
+          concernLevel = "medium-concern";
+          verdictClass = "medium-credibility";
         } else if (fakeScore <= 60 && newsScore < 40) {
           verdictMessage = "Mixed Assessment: While the video appears visually authentic, the spoken content contains factual inaccuracies or misinformation.";
+          concernLevel = "medium-concern";
+          verdictClass = "medium-credibility";
         } else {
           verdictMessage = "Low Concern: Both the visual content and spoken information appear to be largely authentic and accurate.";
+          concernLevel = "low-concern";
+          verdictClass = "high-credibility";
         }
         combinedVerdictText.textContent = verdictMessage;
+        const verdictElement = combinedVerdictSection.querySelector(".combined-verdict");
+        verdictElement.classList.remove("high-concern", "medium-concern", "low-concern");
+        verdictElement.classList.add(concernLevel);
+        const combinedScoreElement = document.getElementById("combined-score");
+        if (combinedScoreElement) {
+          combinedScoreElement.textContent = `${combinedScore}%`;
+          combinedScoreElement.className = "combined-score " + verdictClass;
+        }
         combinedVerdictSection.classList.remove("hidden");
       } else {
         if (combinedVerdictSection) {
@@ -231,6 +256,7 @@ document.addEventListener("DOMContentLoaded", function() {
           sourceItem.innerHTML = `
             <a href="${source.url}" target="_blank" class="evidence-link">
               <div class="evidence-title">${source.title}</div>
+              <div class="evidence-snippet">${source.snippet || 'External source supporting the analysis'}</div>
               <div class="evidence-url">${new URL(source.url).hostname}</div>
             </a>
           `;
