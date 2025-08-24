@@ -1,9 +1,12 @@
 facenet_pytorch==2.6.0
 fastapi==0.116.1
+groq==0.31.0
+httpx==0.28.1
 numpy==2.3.2
 opencv_contrib_python==4.10.0.84
 opencv_python==4.8.0.76
+protobuf==6.32.0
 pydantic==2.11.7
-streamlit==1.32.2
+python-dotenv==1.1.1
 torchvision==0.17.2
 uvicorn==0.35.0
