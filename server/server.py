@@ -897,6 +897,8 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
                     "url": source.get("url", "")
                 } for source in news_evidence[:3]
             ]
+        with open(f"combined_analysis_{result_id}.json", "w") as f:
+            json.dump(response, f)
         logger.info(f"Combined analysis completed with fake_score: {fake_score}, news_score: {news_score}, result_id: {result_id}")
         return response
     except Exception as e:
