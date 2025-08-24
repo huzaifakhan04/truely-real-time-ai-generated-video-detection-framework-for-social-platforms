@@ -537,7 +537,7 @@ class VideoAnalysisRequest(BaseModel):
     videoPath: str
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "videoPath": "/tmp/video_123456.mp4"
             }
@@ -617,7 +617,7 @@ class AudioAnalysisRequest(BaseModel):
     audioPath: str
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "audioPath": "/tmp/audio_123456.mp3"
             }
@@ -748,7 +748,7 @@ class CombinedAnalysisRequest(BaseModel):
     audioPath: Optional[str] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "videoPath": "/tmp/video_123456.mp4",
                 "audioPath": "/tmp/audio_123456.mp3"
