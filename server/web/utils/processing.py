@@ -54,7 +54,6 @@ def search_and_filter_sources(transcript: str, tavily_api_key: str, gemini_api_k
     return news_results, t1 - t0
 
 def score_and_filter_similarity(transcript: str, news_results: List[Dict], gemini_api_key: str) -> Tuple[List[Dict], List[Tuple[float, Dict]]]:
-    similarity_start = time.monotonic()
     try:
         scored_results = score_similarity_batch(transcript, news_results, gemini_api_key, max_workers=5)
     except Exception as e:
