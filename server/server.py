@@ -32,7 +32,7 @@ from fastapi.responses import (
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from model import run
+from server.model import run
 
 load_dotenv()
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")

@@ -2,11 +2,20 @@ facenet_pytorch==2.6.0
 fastapi==0.116.1
 groq==0.31.0
 httpx==0.28.1
-numpy==2.3.2
-opencv_contrib_python==4.10.0.84
-opencv_python==4.8.0.76
-protobuf==6.32.0
+numpy==1.26.4
+
+# OpenCV: single wheel to avoid cv2 clashes, works with NumPy 1.x
+opencv-contrib-python-headless==4.10.0.84
+
+# Protobuf must be <6 when using google-ai-generativelanguage==0.6.15
+protobuf==5.29.5
+
 pydantic==2.11.7
 python-dotenv==1.1.1
+torch==2.2.2
 torchvision==0.17.2
 uvicorn==0.35.0
+
+# Legacy Gemini client + its exact transport dependency
+google-ai-generativelanguage==0.6.15
+google-generativeai==0.8.5
