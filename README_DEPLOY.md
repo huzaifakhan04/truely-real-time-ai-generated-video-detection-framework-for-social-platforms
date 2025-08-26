@@ -17,7 +17,7 @@ Quick local run (Python environment):
 
 4. Start the server:
 
-   uvicorn server.server:app --reload --host 0.0.0.0 --port 8000
+   uvicorn server.server:app --reload --host 0.0.0.0 --port 5001
 
 Run with Docker (recommended for reproducible env):
 
@@ -25,7 +25,7 @@ Run with Docker (recommended for reproducible env):
 
    docker-compose up --build
 
-This exposes the app on http://localhost:8000
+This exposes the app on http://localhost:5001
 
 Notes:
 - The Docker image installs system dependencies required by OpenCV and ffmpeg and then installs Python packages in `requirements.txt`.

@@ -30,7 +30,7 @@ RUN pip install yt-dlp
 # Copy project
 COPY . /app
 
-EXPOSE 8000
+EXPOSE 5001
 
-# Default command: run uvicorn on port 8000
-CMD ["uvicorn", "server.server:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default command: run uvicorn on port 5001
+CMD ["uvicorn", "server.server:app", "--host", "0.0.0.0", "--port", "5001"]
