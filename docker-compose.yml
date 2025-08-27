@@ -10,18 +10,6 @@ services:
       - ./:/app
     restart: unless-stopped
 
-  caddy:
-    image: caddy:2.7.4
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-    environment:
-      ACME_AGREE: "true"
-    env_file:
-      - .env
-    restart: unless-stopped
-
   cloudflared_ephemeral:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
