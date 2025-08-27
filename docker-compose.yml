@@ -18,8 +18,8 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
     environment:
       ACME_AGREE: "true"
-      BASIC_AUTH_USER: ${AUTH_USER}
-      BASIC_AUTH_HASH: ${AUTH_HASH}
+    env_file:
+      - .env
     restart: unless-stopped
 
   cloudflared_ephemeral:
