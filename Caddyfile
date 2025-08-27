@@ -1,0 +1,13 @@
+{
+  auto_https off
+  admin off
+}
+
+:8080 {
+  encode gzip
+  # use env-vars set in docker-compose for basic auth
+  basicauth {
+    {$AUTH_USER} {$AUTH_HASH}
+  }
+  reverse_proxy app:5001
+}
