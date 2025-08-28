@@ -1,8 +1,6 @@
-version: "3.8"
 services:
   app:
     build: .
-    # make sure your app listens on 0.0.0.0:5001 inside the container
     environment:
       TAVILY_API_KEY: ${TAVILY_API_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
@@ -13,8 +11,6 @@ services:
   cloudflared_ephemeral:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    command: tunnel --url http://caddy:8080
+    command: tunnel --url http://app:5001
 
-volumes:
-  caddy_data:
-  caddy_config:
+volumes: {}
