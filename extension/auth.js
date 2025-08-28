@@ -114,76 +114,84 @@ document.addEventListener("DOMContentLoaded", async function() {
             const password = document.getElementById("register-password").value;
             const confirm = document.getElementById("register-confirm").value;
             if (password !== confirm) {
-            showError(registerError, "Passwords don't match");
-            return;
+                showError(registerError, "Passwords don't match");
+                return;
             }
             if (password.length < 6) {
-            showError(registerError, "Password must be at least 6 characters");
-            return;
+                showError(registerError, "Password must be at least 6 characters");
+                return;
             }
             setButtonLoading(registerButton, true);
             hideError(registerError);
+            const observer = new MutationObserver(() => {
+                if (!registerButton.classList.contains("loading")) {
+                    observer.disconnect();
+                    while (registerForm.firstChild) {
+                        registerForm.removeChild(registerForm.firstChild);
+                    }
+                    const verificationHTML = `
+                        <div class="email-verification-container">
+                            <div class="message success">
+                                <div class="message-icon">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                <div class="message-content">
+                                    <h3>Registration Successful!</h3>
+                                    <p>Please check your email to verify your account.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="email-verification-steps">
+                                <div class="verification-step">
+                                    <div class="step-icon"><i class="fas fa-envelope"></i></div>
+                                    <div class="step-content">
+                                        <h4>Step 1: Check Your Inbox</h4>
+                                        <p>We've sent a verification link to <strong>${email}</strong>.</p>
+                                    </div>
+                                </div>
+                                <div class="verification-step">
+                                    <div class="step-icon"><i class="fas fa-link"></i></div>
+                                    <div class="step-content">
+                                        <h4>Step 2: Click the Verification Link</h4>
+                                        <p>Open the email and click on the verification link.</p>
+                                    </div>
+                                </div>
+                                <div class="verification-step">
+                                    <div class="step-icon"><i class="fas fa-sign-in-alt"></i></div>
+                                    <div class="step-content">
+                                        <h4>Step 3: Return to Sign In</h4>
+                                        <p>Come back to the extension to sign in after verification.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button class="btn secondary-btn" id="back-to-login">
+                                <span>Back to Login</span>
+                            </button>
+                        </div>
+                    `;
+                    registerForm.innerHTML = verificationHTML;
+                    registerForm.classList.remove("hidden");
+                    document.getElementById("back-to-login").addEventListener("click", function() {
+                        window.location.reload();
+                    });
+                }
+            });
+            observer.observe(registerButton, { attributes: true, attributeFilter: ["class"] });
             try {
                 console.log("Attempting to sign up with:", supabaseUrl);
-                const { data, error } = await supabase.auth.signUp({
+                await supabase.auth.signUp({
                     email: email,
                     password: password,
                     options: {
                         emailRedirectTo: chrome.runtime.getURL("auth.html")
                     }
-                }).catch(err => {
-                    console.error("Sign up request failed:", err);
-                    return { data: null, error: { message: "Failed to fetch: " + err.message } };
                 });
-                console.log("Sign up response:", data ? "Success" : "Failed");
-                if (error) {
-                    showError(registerError, error.message);
-                    setButtonLoading(registerButton, false);
-                    return;
-                }
-                if (data.user && data.user.identities && data.user.identities.length === 0) {
-                    showError(registerError, "This email is already registered. Please sign in instead.");
-                    setButtonLoading(registerButton, false);
-                    return;
-                }
-                if (data.user && !data.session) {
-                    registerForm.innerHTML = `
-                    <div class="message success">
-                        <div class="message-icon">
-                        <i class="fas fa-check-circle"></i>
-                        </div>
-                        <div class="message-content">
-                        <h3>Registration Successful!</h3>
-                        <p>Please check your email to confirm your account before signing in.</p>
-                        </div>
-                    </div>
-                    <button class="btn secondary-btn" id="back-to-login">
-                        <span>Back to Login</span>
-                    </button>
-                    `;
-                    document.getElementById("back-to-login").addEventListener("click", function() {
-                    window.location.reload();
-                    });
-                    return;
-                }
-                if (data.session) {
-                    const session = {
-                    access_token: data.session.access_token,
-                    refresh_token: data.session.refresh_token,
-                    expires_at: data.session.expires_at,
-                    user: {
-                        id: data.user.id,
-                        email: data.user.email
-                    }
-                    };
-                    chrome.storage.local.set({ session: session }, function() {
-                    window.location.href = "popup.html";
-                    });
-                }
             } catch (err) {
+                console.error("Sign up error:", err);
                 showError(registerError, "An unexpected error occurred. Please try again.");
+            } finally {
                 setButtonLoading(registerButton, false);
-                console.error(err);
             }
         });
 
