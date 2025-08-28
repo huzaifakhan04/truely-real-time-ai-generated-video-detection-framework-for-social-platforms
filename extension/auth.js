@@ -125,7 +125,6 @@ document.addEventListener("DOMContentLoaded", async function() {
             hideError(registerError);
             try {
                 console.log("Attempting to sign up with:", supabaseUrl);
-                // Add more detailed logging for debugging
                 const { data, error } = await supabase.auth.signUp({
                     email: email,
                     password: password,
@@ -136,9 +135,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                     console.error("Sign up request failed:", err);
                     return { data: null, error: { message: "Failed to fetch: " + err.message } };
                 });
-                
                 console.log("Sign up response:", data ? "Success" : "Failed");
-                
                 if (error) {
                     showError(registerError, error.message);
                     setButtonLoading(registerButton, false);
