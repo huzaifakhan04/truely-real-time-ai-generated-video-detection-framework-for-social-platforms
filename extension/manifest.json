@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Truely - AI-Generated Video Detector",
-  "version": "2.0.5",
+  "name": "Truely - Real-Time AI-Generated Video Detection",
+  "version": "2.1.1",
   "description": "Detects AI-generated content in YouTube, Twitter, Facebook, and Reddit videos.",
   "icons": {
     "16": "icons/icon16.png",
@@ -33,7 +33,8 @@
     "https://www.reddit.com/*",
     "https://redd.it/*",
     "http://localhost:5001/*",
-    "https://lgfgocwqlfpnkcteiyen.supabase.co/*"
+    "https://lgfgocwqlfpnkcteiyen.supabase.co/*",
+    "https://*.supabase.co/*"
   ],
   "background": {
     "service_worker": "background.js"
@@ -58,7 +59,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["supabase-js-bundle.js"],
+      "resources": ["supabase-js-bundle.js", "config.js"],
       "matches": ["<all_urls>"]
     }
   ]

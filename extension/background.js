@@ -1,6 +1,26 @@
 const SERVER_URL = "http://localhost:5001";
+let ENV_VARS = {
+  SUPABASE_URL: "",
+  SUPABASE_KEY: ""
+};
+
+importScripts("config.js");
+
+function loadEnvVars() {
+  if (self.CONFIG) {
+    Object.keys(ENV_VARS).forEach(key => {
+      if (self.CONFIG[key]) {
+        ENV_VARS[key] = self.CONFIG[key];
+      }
+    });
+    console.log("Environment variables loaded from config.js");
+  } else {
+    console.warn("No configuration values found in config.js");
+  }
+}
 
 chrome.runtime.onInstalled.addListener(function() {
+  loadEnvVars();
   checkAuthentication();
 });
 
@@ -13,7 +33,7 @@ async function checkAuthentication() {
     const expiresAt = result.session.expires_at * 1000;
     if (Date.now() > expiresAt) {
       console.log("Session expired, redirecting to login");
-      chrome.storage.local.remove(['session']);
+      chrome.storage.local.remove(["session"]);
     } else {
       console.log("User is authenticated");
     }
@@ -22,7 +42,7 @@ async function checkAuthentication() {
 
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   if (request.action === "checkAuth") {
-    chrome.storage.local.get(['session'], function(result) {
+    chrome.storage.local.get(["session"], function(result) {
       sendResponse({isAuthenticated: !!result.session});
     });
     return true;
@@ -74,6 +94,13 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     analyzeCombined(request.videoPath, request.audioPath)
       .then(result => sendResponse(result))
       .catch(error => sendResponse({error: error.message}));
+    return true;
+  }
+  if (request.action === "getEnvVars") {
+    sendResponse({
+      SUPABASE_URL: ENV_VARS.SUPABASE_URL,
+      SUPABASE_KEY: ENV_VARS.SUPABASE_KEY
+    });
     return true;
   }
 });
