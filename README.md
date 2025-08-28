@@ -1,6 +1,6 @@
 # Truely - Real-Time AI-Generated Video Detection Framework for Social Platforms:
 
-An advanced browser extension and API that analyzes videos to detect AI-generated or manipulated content by tracking facial consistency between frames and verifying audio content against credible sources.
+A real-time browser extension that detects AI-generated or manipulated videos on social platforms and cross-verifies audio content against trusted sources using agentic AI web search.
 
 ## Overview:
 
