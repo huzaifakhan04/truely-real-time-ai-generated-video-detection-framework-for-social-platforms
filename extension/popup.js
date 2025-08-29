@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
     const expiresAt = result.session.expires_at * 1000;
     if (Date.now() > expiresAt) {
-      chrome.storage.local.remove(['session'], function() {
+      chrome.storage.local.remove(["session"], function() {
         window.location.href = "auth.html";
       });
       return;
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     function startAnalysis(videoUrl) {
-      updateProgress(10, "Downloading video and audio...");
+      updateProgress(10, "Fetching video and audio...");
       chrome.runtime.sendMessage(
         {action: "downloadCombined", videoUrl: videoUrl},
         function(response) {
@@ -112,11 +112,11 @@ document.addEventListener("DOMContentLoaded", function() {
             showError(response.error);
             return;
           }
-          updateProgress(30, "Processing video frames...");
+          updateProgress(30, "Scanning frames...");
           setTimeout(() => {
-            updateProgress(50, "Analyzing facial features...");
+            updateProgress(50, "Checking facial details...");
             setTimeout(() => {
-              updateProgress(70, "Evaluating content credibility...");
+              updateProgress(70, "Assessing credibility...");
               chrome.runtime.sendMessage(
                 {
                   action: "analyzeCombined", 
@@ -128,9 +128,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     showError(analysisResponse.error);
                     return;
                   }
-                  updateProgress(90, "Finalizing results...");
+                  updateProgress(90, "Finalizing...");
                   setTimeout(() => {
-                    updateProgress(100, "Analysis complete!");
+                    updateProgress(100, "Done!");
                     
                     setTimeout(() => {
                       displayResults(analysisResponse);
@@ -208,45 +208,6 @@ document.addEventListener("DOMContentLoaded", function() {
           newsSection.classList.add("hidden");
         }
       }
-      const combinedVerdictSection = document.getElementById("combined-verdict");
-      const combinedVerdictText = document.getElementById("combined-verdict-text");
-      if (combinedVerdictSection && combinedVerdictText && analysisResponse.newsScore) {
-        const combinedScore = Math.round((fakeScore + analysisResponse.newsScore) / 2);
-        let verdictMessage = "";
-        let verdictClass = "";
-        let concernLevel = "";
-        if (fakeScore > 60 && newsScore < 40) {
-          verdictMessage = "High Concern: This content shows both visual manipulation signs and factual inaccuracies in the audio content.";
-          concernLevel = "high-concern";
-          verdictClass = "low-credibility";
-        } else if (fakeScore > 60 && newsScore >= 40) {
-          verdictMessage = "Mixed Assessment: While the visual content shows signs of AI manipulation, the factual content may still contain accurate information.";
-          concernLevel = "medium-concern";
-          verdictClass = "medium-credibility";
-        } else if (fakeScore <= 60 && newsScore < 40) {
-          verdictMessage = "Mixed Assessment: While the video appears visually authentic, the spoken content contains factual inaccuracies or misinformation.";
-          concernLevel = "medium-concern";
-          verdictClass = "medium-credibility";
-        } else {
-          verdictMessage = "Low Concern: Both the visual content and spoken information appear to be largely authentic and accurate.";
-          concernLevel = "low-concern";
-          verdictClass = "high-credibility";
-        }
-        combinedVerdictText.textContent = verdictMessage;
-        const verdictElement = combinedVerdictSection.querySelector(".combined-verdict");
-        verdictElement.classList.remove("high-concern", "medium-concern", "low-concern");
-        verdictElement.classList.add(concernLevel);
-        const combinedScoreElement = document.getElementById("combined-score");
-        if (combinedScoreElement) {
-          combinedScoreElement.textContent = `${combinedScore}%`;
-          combinedScoreElement.className = "combined-score " + verdictClass;
-        }
-        combinedVerdictSection.classList.remove("hidden");
-      } else {
-        if (combinedVerdictSection) {
-          combinedVerdictSection.classList.add("hidden");
-        }
-      }
       const evidenceContainer = document.getElementById("evidence-list");
       if (evidenceContainer && analysisResponse.evidence && analysisResponse.evidence.length > 0) {
         evidenceContainer.innerHTML = "";
@@ -256,7 +217,7 @@ document.addEventListener("DOMContentLoaded", function() {
           sourceItem.innerHTML = `
             <a href="${source.url}" target="_blank" class="evidence-link">
               <div class="evidence-title">${source.title}</div>
-              <div class="evidence-snippet">${source.snippet || 'External source supporting the analysis'}</div>
+              <div class="evidence-snippet">${source.snippet || 'Source confirming this'}</div>
               <div class="evidence-url">${new URL(source.url).hostname}</div>
             </a>
           `;
@@ -302,7 +263,7 @@ document.addEventListener("DOMContentLoaded", function() {
       initialStateDiv.classList.remove("hidden");
       let userMessage = message;
       if (message.includes("Server connection failed")) {
-        userMessage = "Cannot connect to the analysis server. Please make sure the Python server is running by executing 'python server.py' in the server directory.";
+        userMessage = "Connection failed: Please ensure the analysis server is running. Start it by executing 'python server.py' in the server folder.";
       }
       const errorDiv = document.createElement("div");
       errorDiv.className = "message error";
@@ -389,7 +350,7 @@ document.addEventListener("DOMContentLoaded", function() {
         videoContentDiv.classList.add("hidden");
         notVideoPageDiv.classList.remove("hidden");
         document.getElementById("unsupported-message").textContent = 
-          "This extension works on YouTube, Facebook, Twitter, and Reddit video pages.";
+          "Currently supported on YouTube, Facebook, Twitter/X, and Reddit video pages.";
       }
     }
 
@@ -411,11 +372,11 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function generateExplanationText(fakeScore) {
       if (fakeScore > 90) {
-        return "This video shows significant facial inconsistencies between frames, strongly indicating AI manipulation. The high percentage of detected anomalies suggests this is likely AI-generated content.";
+        return "This video shows strong signs of AI-generated alteration – facial inconsistencies and anomalies suggest possible manipulation.";
       } else if (fakeScore > 70) {
-        return "This video displays notable facial inconsistencies between frames, indicating AI manipulation. The detected anomalies suggest this video contains AI-generated elements.";
+        return "This video shows clear indications of AI manipulation – recurring facial inconsistencies across frames suggest AI-generated editing.";
       } else {
-        return `This video shows some signs of facial inconsistency between frames, which may indicate AI manipulation. ${fakeScore}% of analyzed frames appear to have been modified.`;
+        return `This video shows mild signs of possible AI alteration – subtle inconsistencies were detected in ${fakeScore}% of analyzed frames.`;
       }
     }
   
