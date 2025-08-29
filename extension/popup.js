@@ -350,7 +350,7 @@ document.addEventListener("DOMContentLoaded", function() {
         videoContentDiv.classList.add("hidden");
         notVideoPageDiv.classList.remove("hidden");
         document.getElementById("unsupported-message").textContent = 
-          "Currently supported on YouTube, Facebook, Twitter/X, and Reddit video pages.";
+          "⚠️ Truely works only on video pages.";
       }
     }
 
