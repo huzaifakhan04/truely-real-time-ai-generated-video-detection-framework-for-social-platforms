@@ -357,7 +357,7 @@ h3 {
   justify-content: center;
   vertical-align: middle;
   position: relative;
-  top: -1px;
+  top: 0px;
 }
 
 .btn.loading {

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="popup-additions.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <title>Truely - AI-Generated Video Detector</title>
+    <title>Truely</title>
   </head>
   <body>
     <div class="container">
@@ -15,7 +15,7 @@
         <img src="icons/icon48.png" alt="Truely logo" class="header-icon">
         <div class="header-branding">
           <h1>Truely</h1>
-          <span class="header-tagline">AI-Generated Video Detector</span>
+          <span class="header-tagline">Look Closer. Know Better.</span>
         </div>
       </header>
       <div id="not-youtube" class="hidden message error">
@@ -23,8 +23,8 @@
           <i class="fas fa-exclamation-circle"></i>
         </div>
         <div class="message-content">
-          <p id="unsupported-message">This extension only works on video pages.</p>
-          <p>Please navigate to a YouTube, Facebook, Twitter, or Reddit video page and try again.</p>
+          <p id="unsupported-message">⚠️ Truely works only on video pages.</p>
+          <p>Open a video on YouTube, Facebook, Twitter/X, or Reddit to start verifying content.</p>
         </div>
       </div>
       <div id="youtube-content" class="hidden">
@@ -34,12 +34,12 @@
               <i class="fas fa-shield-alt"></i>
             </div>
             <div class="message-content">
-              <p>Detect AI-generated content in this <span id="platform-name"></span> video with our advanced facial analysis technology.</p>
+              <p>Not sure if a video is real? Let Truely fact-check it in seconds using AI-powered video and audio analysis.</p>
             </div>
           </div>
           <div id="error-container"></div>
-          <button id="analyze-btn" class="btn primary-btn focus-visible" aria-label="Analyze video for AI-generated content">
-            <span>Analyze Video</span>
+          <button id="analyze-btn" class="btn primary-btn focus-visible" aria-label="Start AI-powered video verification">
+            <span>👀 Verify This Video</span>
             <i class="fas fa-arrow-right btn-icon"></i>
           </button>
           <div class="feature-list">
@@ -49,7 +49,7 @@
               </div>
               <div class="feature-content">
                 <div class="feature-title">AI Detection</div>
-                <div class="feature-text">Analyze facial inconsistencies between frames to detect AI manipulation.</div>
+                <div class="feature-text">Detect the subtle AI edits that others overlook, before they mislead you.</div>
               </div>
             </div>
             <div class="feature-item">
@@ -57,8 +57,8 @@
                 <i class="fas fa-bolt feature-icon"></i>
               </div>
               <div class="feature-content">
-                <div class="feature-title">Fast Analysis</div>
-                <div class="feature-text">Get results in seconds with our optimized detection algorithms.</div>
+                <div class="feature-title">Lightning Fast</div>
+                <div class="feature-text">Real-time AI that delivers answers the moment you need them.</div>
               </div>
             </div>
             <div class="feature-item">
@@ -66,8 +66,8 @@
                 <i class="fas fa-chart-line feature-icon"></i>
               </div>
               <div class="feature-content">
-                <div class="feature-title">Detailed Reports</div>
-                <div class="feature-text">View comprehensive analysis with confidence metrics.</div>
+                <div class="feature-title">Trusted Reports</div>
+                <div class="feature-text">See how credible a video is with fact-checks and source references.</div>
               </div>
             </div>
           </div>
@@ -76,7 +76,7 @@
           <div id="url-info-container"></div>
           <div class="progress">
             <div class="progress-header">
-              <div id="progress-step">Downloading video...</div>
+              <div id="progress-step">Analyzing video integrity...</div>
               <div class="progress-percentage">0%</div>
             </div>
             <div class="progress-bar-container">
@@ -91,7 +91,7 @@
               <div></div>
             </div>
           </div>
-          <p class="text-center text-muted">Please wait while we analyze your video for AI-generated content...</p>
+          <p class="text-center text-muted">Sit tight – Truely is verifying authenticity and cross-checking claims...</p>
         </div>
         <div id="result-state" class="hidden state-transition">
           <div id="result-url-info"></div>
@@ -99,38 +99,38 @@
             <div class="result-icon">
               <i class="fas fa-check-circle"></i>
             </div>
-            <h2>Authentic Video Detected</h2>
+            <h2>✅ Authentic Video</h2>
             <div class="score-display real" role="img" aria-label="Authenticity score">
               <p class="percentage" id="real-score">100%</p>
-              <p class="label">Authentic</p>
+              <p class="label">Verified Real</p>
             </div>
-            <p>This video appears to be authentic with no significant signs of AI manipulation.</p>
+            <p>No significant AI manipulation detected. This video appears genuine.</p>
             <div class="report-section">
-              <h3><i class="fas fa-clipboard-check"></i> Analysis Details</h3>
+              <h3><i class="fas fa-clipboard-check"></i> Verification Insights</h3>
               <div class="report-details">
                 <div class="report-detail">
                   <span class="report-detail-label"><i class="fas fa-face-smile"></i> Facial Consistency</span>
-                  <span class="report-detail-value low" id="real-consistency">High</span>
+                  <span class="report-detail-value low" id="real-consistency">Stable</span>
                 </div>
                 <div class="report-detail">
                   <span class="report-detail-label"><i class="fas fa-film"></i> Frame Anomalies</span>
-                  <span class="report-detail-value low" id="real-anomalies">Low</span>
+                  <span class="report-detail-value low" id="real-anomalies">Minimal</span>
                 </div>
                 <div class="report-detail">
-                  <span class="report-detail-label"><i class="fas fa-check-double"></i> Authenticity</span>
+                  <span class="report-detail-label"><i class="fas fa-check-double"></i> Authenticity Level</span>
                   <span class="report-detail-value low" id="real-authenticity">High</span>
                 </div>
               </div>
             </div>
             <div id="real-news-analysis-section" class="report-section hidden">
-              <h3><i class="fas fa-newspaper"></i> Content Credibility</h3>
+              <h3><i class="fas fa-newspaper"></i> Fact-Check Results</h3>
               <div class="report-details">
                 <div class="report-detail">
                   <span class="report-detail-label"><i class="fas fa-check-circle"></i> Credibility Score</span>
                   <span class="report-detail-value low" id="real-credibility-score">0%</span>
                 </div>
                 <div class="report-detail">
-                  <span class="report-detail-label"><i class="fas fa-gavel"></i> Content Verdict</span>
+                  <span class="report-detail-label"><i class="fas fa-gavel"></i> Verdict</span>
                   <span class="report-detail-value low" id="real-content-verdict">Uncertain</span>
                 </div>
                 <div class="report-detail">
@@ -139,56 +139,56 @@
                 </div>
               </div>
               <div class="summary-container">
-                <p id="real-news-summary" class="text-sm">No summary available.</p>
+                <p id="real-news-summary" class="text-sm">No fact-check summary available.</p>
               </div>
             </div>
             <div id="real-sources-section" class="report-section hidden">
-              <h3><i class="fas fa-link"></i> Referenced Sources</h3>
+              <h3><i class="fas fa-link"></i> Verified Sources</h3>
               <div class="evidence-container">
                 <div id="real-evidence-list"></div>
               </div>
             </div>
-            <a id="real-detailed-view-link" href="#" target="_blank" class="btn secondary-btn focus-visible" aria-label="View detailed analysis report">
+            <a id="real-detailed-view-link" href="#" target="_blank" class="btn secondary-btn focus-visible" aria-label="View full analysis report">
               <i class="fas fa-chart-line btn-icon"></i>
-              <span>View Detailed Analysis</span>
+              <span>See Full Report</span>
             </a>
           </div>
           <div id="fake-result" class="result-box hidden">
             <div class="result-icon">
               <i class="fas fa-robot"></i>
             </div>
-            <h2>AI-Generated Content Detected</h2>
+            <h2>⚠️ AI Manipulation Detected</h2>
             <div class="score-display fake" role="img" aria-label="AI detection score">
               <p class="percentage" id="fake-score">95%</p>
-              <p class="label">AI-Generated</p>
+              <p class="label">AI-Generated Content Suspected</p>
             </div>
-            <p id="fake-explanation">This video shows signs of facial inconsistency between frames, which is a common indicator of AI-generated or deepfake content.</p>
+            <p id="fake-explanation">This video shows strong signs of AI-generated alteration – facial inconsistencies and anomalies suggest possible manipulation.</p>
             <div class="report-section">
-              <h3><i class="fas fa-chart-bar"></i> Analysis Details</h3>
+              <h3><i class="fas fa-chart-bar"></i> Detection Insights</h3>
               <div class="report-details">
                 <div class="report-detail">
                   <span class="report-detail-label"><i class="fas fa-face-meh"></i> Facial Consistency</span>
-                  <span class="report-detail-value high" id="fake-consistency">Low</span>
+                  <span class="report-detail-value high" id="fake-consistency">Unstable</span>
                 </div>
                 <div class="report-detail">
                   <span class="report-detail-label"><i class="fas fa-film"></i> Frame Anomalies</span>
-                  <span class="report-detail-value high" id="fake-anomalies">High</span>
+                  <span class="report-detail-value high" id="fake-anomalies">Frequent</span>
                 </div>
                 <div class="report-detail">
-                  <span class="report-detail-label"><i class="fas fa-gauge-high"></i> Confidence</span>
+                  <span class="report-detail-label"><i class="fas fa-gauge-high"></i> Confidence Level</span>
                   <span class="report-detail-value high" id="fake-confidence">High</span>
                 </div>
               </div>
             </div>
             <div id="news-analysis-section" class="report-section hidden">
-              <h3><i class="fas fa-newspaper"></i> Content Credibility</h3>
+              <h3><i class="fas fa-newspaper"></i> Fact-Check Results</h3>
               <div class="report-details">
                 <div class="report-detail">
                   <span class="report-detail-label"><i class="fas fa-check-circle"></i> Credibility Score</span>
                   <span class="report-detail-value high" id="credibility-score">0%</span>
                 </div>
                 <div class="report-detail">
-                  <span class="report-detail-label"><i class="fas fa-gavel"></i> Content Verdict</span>
+                  <span class="report-detail-label"><i class="fas fa-gavel"></i> Verdict</span>
                   <span class="report-detail-value high" id="content-verdict">Uncertain</span>
                 </div>
                 <div class="report-detail">
@@ -197,27 +197,27 @@
                 </div>
               </div>
               <div class="summary-container">
-                <p id="news-summary" class="text-sm">No summary available.</p>
+                <p id="news-summary" class="text-sm">No fact-check summary available.</p>
               </div>
             </div>
             <div id="sources-section" class="report-section hidden">
-              <h3><i class="fas fa-link"></i> Referenced Sources</h3>
+              <h3><i class="fas fa-link"></i> Verified Sources</h3>
               <div class="evidence-container">
                 <div id="evidence-list"></div>
               </div>
             </div>
-            <a id="detailed-view-link" href="#" target="_blank" class="btn secondary-btn focus-visible" aria-label="View detailed analysis report">
+            <a id="detailed-view-link" href="#" target="_blank" class="btn secondary-btn focus-visible" aria-label="View full analysis report">
               <i class="fas fa-chart-line btn-icon"></i>
-              <span>View Detailed Analysis</span>
+              <span>See Full Report</span>
             </a>
           </div>
-          <button id="analyze-again-btn" class="btn primary-btn focus-visible" aria-label="Analyze the video again">
+          <button id="analyze-again-btn" class="btn primary-btn focus-visible" aria-label="Verify the video again">
             <i class="fas fa-rotate btn-icon"></i>
-            <span>Analyze Again</span>
+            <span>Verify Again</span>
           </button>
-          <button id="share-result-btn" class="btn secondary-btn share-btn" aria-label="Share this analysis result">
+          <button id="share-result-btn" class="btn secondary-btn share-btn" aria-label="Share this verification result">
             <i class="fas fa-share-alt btn-icon"></i>
-            <span>Share Result</span>
+            <span>Share Verification</span>
           </button>
         </div>
       </div>
@@ -226,7 +226,7 @@
           <img src="icons/icon48.png" alt="Truely icon">
           <span>Truely</span>
         </div>
-        <div class="footer-tagline">Promoting Media Literacy in the AI Era</div>
+        <div class="footer-tagline">Verify Before You Believe.</div>
         <div class="footer-links">
           <a href="https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool" class="footer-link focus-visible" target="_blank" rel="noopener">GitHub</a>
           <a href="#" class="footer-link focus-visible" id="about-link">About</a>
