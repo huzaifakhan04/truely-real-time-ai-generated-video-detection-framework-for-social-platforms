@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", function() {
     aboutLink.addEventListener("click", function(e) {
       e.preventDefault();
       chrome.tabs.create({
-        url: "https://github.com/unesco-youth-hackathon-2025/ai-generated-video-detection-tool/blob/main/README.md"
+        url: "https://github.com/huzaifakhan04/truely-real-time-ai-generated-video-detection-framework-for-social-platforms/blob/main/README.md"
       });
     });
 
