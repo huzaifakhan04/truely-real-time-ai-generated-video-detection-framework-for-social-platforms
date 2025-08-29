@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 return;
             }
             if (!data || !data.session) {
-                showError(loginError, "No session returned. Please try again.");
+                showError(loginError, "Login failed. No session returned. Please try again.");
                 setButtonLoading(loginButton, false);
                 return;
             }
@@ -102,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 window.location.href = "popup.html";
             });
             } catch (err) {
-            showError(loginError, "An unexpected error occurred. Please try again.");
+            showError(loginError, "Something went wrong. Please try again.");
             setButtonLoading(loginButton, false);
             console.error(err);
             }
@@ -114,11 +114,11 @@ document.addEventListener("DOMContentLoaded", async function() {
             const password = document.getElementById("register-password").value;
             const confirm = document.getElementById("register-confirm").value;
             if (password !== confirm) {
-                showError(registerError, "Passwords don't match");
+                showError(registerError, "Passwords do not match");
                 return;
             }
             if (password.length < 6) {
-                showError(registerError, "Password must be at least 6 characters");
+                showError(registerError, "Password must be at least 6 characters long");
                 return;
             }
             setButtonLoading(registerButton, true);
@@ -136,8 +136,8 @@ document.addEventListener("DOMContentLoaded", async function() {
                                     <i class="fas fa-check-circle"></i>
                                 </div>
                                 <div class="message-content">
-                                    <h3>Registration Successful!</h3>
-                                    <p>Please check your email to verify your account.</p>
+                                    <h3>🎉 Account Created Successfully!</h3>
+                                    <p>Check your inbox to verify your email and activate your account.</p>
                                 </div>
                             </div>
                             
@@ -145,28 +145,28 @@ document.addEventListener("DOMContentLoaded", async function() {
                                 <div class="verification-step">
                                     <div class="step-icon"><i class="fas fa-envelope"></i></div>
                                     <div class="step-content">
-                                        <h4>Step 1: Check Your Inbox</h4>
-                                        <p>We've sent a verification link to <strong>${email}</strong>.</p>
+                                        <h4>Step 1: Open Your Email</h4>
+                                        <p>A verification link has been sent to <strong>${email}</strong>.</p>
                                     </div>
                                 </div>
                                 <div class="verification-step">
                                     <div class="step-icon"><i class="fas fa-link"></i></div>
                                     <div class="step-content">
-                                        <h4>Step 2: Click the Verification Link</h4>
-                                        <p>Open the email and click on the verification link.</p>
+                                        <h4>Step 2: Verify Your Email</h4>
+                                        <p>Click the verification link in the email to activate your account.</p>
                                     </div>
                                 </div>
                                 <div class="verification-step">
                                     <div class="step-icon"><i class="fas fa-sign-in-alt"></i></div>
                                     <div class="step-content">
-                                        <h4>Step 3: Return to Sign In</h4>
-                                        <p>Come back to the extension to sign in after verification.</p>
+                                        <h4>Step 3: Sign In to Your Account</h4>
+                                        <p>After verifying, return here to sign in.</p>
                                     </div>
                                 </div>
                             </div>
                             
                             <button class="btn secondary-btn" id="back-to-login">
-                                <span>Back to Login</span>
+                                <span>Return to Login</span>
                             </button>
                         </div>
                     `;
@@ -189,7 +189,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                 });
             } catch (err) {
                 console.error("Sign up error:", err);
-                showError(registerError, "An unexpected error occurred. Please try again.");
+                showError(registerError, "Something went wrong. Please try again.");
             } finally {
                 setButtonLoading(registerButton, false);
             }
@@ -230,7 +230,7 @@ document.addEventListener("DOMContentLoaded", async function() {
                         }
                     } catch (err) {
                         console.error("Error checking session:", err);
-                        chrome.storage.local.remove(['session']);
+                        chrome.storage.local.remove(["session"]);
                     }
                 }
             });
@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", async function() {
         }
 
         supabase.auth.onAuthStateChange((event, session) => {
-            if (event === 'SIGNED_IN' && session) {
+            if (event === "SIGNED_IN" && session) {
                 const sessionData = {
                     access_token: session.access_token,
                     refresh_token: session.refresh_token,
