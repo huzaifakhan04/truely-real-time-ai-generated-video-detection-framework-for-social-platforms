@@ -147,8 +147,10 @@ document.addEventListener("DOMContentLoaded", function() {
     function updateCredibilityScore(score) {
       const credibilityValueElem = document.getElementById("credibility-score");
       if (credibilityValueElem) {
-        credibilityValueElem.textContent = `${score}%`;
-        credibilityValueElem.style.color = score > 50 ? "red" : "green";
+        const displayScore = 100 - score;
+        credibilityValueElem.textContent = `${displayScore}%`;
+        // Since we're inverting the score (100 - score), we also invert the color logic
+        credibilityValueElem.style.color = displayScore < 50 ? "red" : "green";
       }
     }
 
@@ -248,7 +250,17 @@ document.addEventListener("DOMContentLoaded", function() {
         if (analysisResponse.newsSummary && analysisResponse.newsSummary !== "No audio analysis available") {
           const credibilityElem = document.getElementById("real-credibility-score");
           if (credibilityElem) {
-            credibilityElem.textContent = `${newsScore}%`;
+            const displayScore = 100 - newsScore;
+            credibilityElem.textContent = `${displayScore}%`;
+            // Apply color based on the inverted score
+            credibilityElem.classList.remove("low", "medium", "high");
+            if (displayScore < 40) {
+              credibilityElem.classList.add("low");
+            } else if (displayScore < 70) {
+              credibilityElem.classList.add("medium");
+            } else {
+              credibilityElem.classList.add("high");
+            }
           }
           const verdictElem = document.getElementById("real-content-verdict");
           if (verdictElem && analysisResponse.verdict) {
