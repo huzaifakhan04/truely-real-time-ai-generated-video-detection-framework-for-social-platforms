@@ -427,20 +427,83 @@ async def download_combined(video_url: Optional[str] = None, audio_format: str =
     if audio_format not in allowed_formats:
         logger.warning(f"Unsupported audio format requested: {audio_format}, using mp3 instead")
         audio_format = "mp3"
-    logger.info(f"Downloading video from URL: {video_url}")
-    video_response = await download_video(video_url=video_url, quality=quality)
-    if "error" in video_response:
-        logger.error(f"Video download failed: {video_response.get('error', 'Unknown error')}")
+    platform, extracted_id = get_platform_and_video_id(video_url)
+    if not platform or not extracted_id:
         return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"error": f"Failed to download video: {video_response['error']}"}
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={"error": "Unsupported URL format"}
         )
-    video_path = video_response["videoPath"]
-    audio_path = video_path.replace(".mp4", f".{audio_format}")
+    timestamp = int(time.time())
+    video_id = str(uuid.uuid4())[:8]
+    audio_id = str(uuid.uuid4())[:8]
+    video_path = os.path.join(tempfile.gettempdir(), f"ai_detector_video_{extracted_id}_{video_id}_{timestamp}.mp4")
+    audio_path = os.path.join(tempfile.gettempdir(), f"ai_detector_audio_{extracted_id}_{audio_id}_{timestamp}.{audio_format}")
     try:
-        logger.info(f"Downloading audio directly from URL: {video_url}")
-        url = video_url
-        cmd = [
+        logger.info(f"Downloading video from URL: {video_url} to {video_path}")
+        
+        target_height = 360
+        if quality and quality.lower().endswith("p"):
+            try:
+                requested_height = int(quality[:-1])
+                if requested_height > 0:
+                    target_height = requested_height
+            except ValueError:
+                logger.warning(f"Invalid quality parameter: {quality}, using default: 360p")
+        format_option = []
+        if platform in ["facebook", "reddit"]:
+            formats = get_available_formats(video_url)
+            format_id = select_best_format(formats, target_height)
+            if format_id:
+                format_option = ["-f", format_id]
+            else:
+                format_option = ["-f", "best"]
+        else:
+            format_option = ["-f", f"best[height<={target_height}]"]
+        video_cmd = [
+            "yt-dlp",
+            "--verbose",
+            "--force-overwrites",
+            "--no-cache-dir",
+            "--no-continue",
+        ] + format_option + [
+            "--merge-output-format", "mp4",
+            "-o", video_path,
+            video_url
+        ]
+        try:
+            video_process = subprocess.run(video_cmd, check=True, capture_output=True, text=True, timeout=180)
+            logger.info(f"Video download process completed with: {video_process.stdout[-200:] if video_process.stdout else 'No output'}")
+        except subprocess.TimeoutExpired:
+            logger.error(f"Video download timed out for URL: {video_url}")
+            return JSONResponse(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                content={"error": "Video download timed out"}
+            )
+        except subprocess.CalledProcessError as e:
+            error_message = e.stderr if hasattr(e, 'stderr') and e.stderr else str(e)
+            logger.error(f"yt-dlp command for video failed: {error_message}")
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"error": f"Failed to download video: {error_message}"}
+            )
+        if not os.path.exists(video_path):
+            logger.error(f"Video path does not exist after download attempt: {video_path}")
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"error": "Downloaded video file does not exist"}
+            )
+        if os.path.getsize(video_path) == 0:
+            logger.error(f"Downloaded video file is empty: {video_path}")
+            try:
+                os.unlink(video_path)
+            except OSError:
+                pass
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"error": "Downloaded video file is empty"}
+            )
+        logger.info(f"Downloading audio from URL: {video_url} to {audio_path}")
+        audio_cmd = [
             "yt-dlp",
             "--verbose",
             "--force-overwrites",
@@ -450,47 +513,55 @@ async def download_combined(video_url: Optional[str] = None, audio_format: str =
             "--audio-format", audio_format,
             "--audio-quality", "0",
             "-o", audio_path,
-            url
+            video_url
         ]
         try:
-            _ = subprocess.run(cmd, check=True, capture_output=True, text=True, timeout=120)
-            logger.info(f"Downloaded audio to {audio_path}")
+            audio_process = subprocess.run(audio_cmd, check=True, capture_output=True, text=True, timeout=120)
+            logger.info(f"Audio download process completed with: {audio_process.stdout[-200:] if audio_process.stdout else 'No output'}")
         except subprocess.TimeoutExpired:
-            logger.error(f"Audio download timed out for URL: {url}")
-            return JSONResponse(
-                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-                content={"error": "Audio download timed out"}
-            )
-        if not os.path.exists(audio_path) or os.path.getsize(audio_path) == 0:
-            logger.error("Failed to obtain valid audio file")
-            return JSONResponse(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"error": "Failed to download audio"}
-            )
-        video_id = str(uuid.uuid4())
-        audio_id = str(uuid.uuid4())
-        analysis_results[audio_id] = {
-            "audio_path": audio_path,
-            "timestamp": time.time()
-        }
-        analysis_results[video_id] = {
+            logger.error(f"Audio download timed out for URL: {video_url}")
+            logger.warning("Proceeding with just video since audio download timed out")
+            audio_path = None
+        except subprocess.CalledProcessError as e:
+            logger.error(f"Audio download failed: {e.stderr if hasattr(e, 'stderr') and e.stderr else str(e)}")
+            logger.warning("Proceeding with just video since audio download failed")
+            audio_path = None
+        if audio_path:
+            if not os.path.exists(audio_path):
+                logger.warning(f"Audio file not found after download attempt: {audio_path}")
+                audio_path = None
+            elif os.path.getsize(audio_path) == 0:
+                logger.warning(f"Downloaded audio file is empty: {audio_path}")
+                try:
+                    os.unlink(audio_path)
+                except OSError:
+                    pass
+                audio_path = None
+        video_result_id = str(uuid.uuid4())
+        analysis_results[video_result_id] = {
             "output_path": video_path,
             "timestamp": time.time()
         }
-        logger.info(f"Successfully prepared combined content. Video ID: {video_id}, Audio ID: {audio_id}")
-        return {
+        audio_result_id = None
+        if audio_path and os.path.exists(audio_path):
+            audio_result_id = str(uuid.uuid4())
+            analysis_results[audio_result_id] = {
+                "audio_path": audio_path,
+                "timestamp": time.time()
+            }
+        result = {
             "videoPath": video_path,
-            "audioPath": audio_path,
-            "videoId": video_id,
-            "audioId": audio_id
+            "videoId": video_result_id,
         }
-    except subprocess.CalledProcessError as e:
-        error_message = e.stderr if hasattr(e, 'stderr') else str(e)
-        logger.error(f"yt-dlp command failed: {error_message}")
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"error": f"Failed to download audio: {error_message}"}
-        )
+        if audio_path and os.path.exists(audio_path):
+            result["audioPath"] = audio_path
+            result["audioId"] = audio_result_id
+            logger.info(f"Successfully downloaded both video and audio. Video ID: {video_result_id}, Audio ID: {audio_result_id}")
+        else:
+            logger.info(f"Successfully downloaded video only. Video ID: {video_result_id}")
+            result["audioPath"] = None
+            result["audioId"] = None
+        return result
     except Exception as e:
         logger.error(f"Unexpected error during combined download: {str(e)}")
         return JSONResponse(
