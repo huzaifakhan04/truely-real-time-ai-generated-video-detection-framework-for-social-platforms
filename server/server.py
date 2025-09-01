@@ -129,6 +129,8 @@ async def view_result(result_id: str, request: Request):
             "news_score": result.get("news_score", "N/A"),
             "news_summary": result.get("news_summary", "No summary available")
         }
+        if "verdict" in template_data and isinstance(template_data["verdict"], str):
+            template_data["verdict"] = template_data["verdict"].capitalize()
         news_evidence = result.get("news_evidence", [])
         if news_evidence:
             template_data["news_evidence"] = [
@@ -777,6 +779,7 @@ async def analyze_audio(data: AudioAnalysisRequest, background_tasks: Background
             "news_score": news_score,
             "news_summary": news_summary,
             "news_evidence": news_evidence,
+            "verdict": news_result.get("verdict", "Uncertain"),
             "timestamp": time.time()
         }
         response = {
@@ -940,6 +943,7 @@ async def analyze_combined(data: CombinedAnalysisRequest, background_tasks: Back
             "news_score": news_score,
             "news_summary": news_summary,
             "news_evidence": news_evidence,
+            "verdict": news_result.get("verdict", "Uncertain"),
             "timestamp": time.time()
         }
 
