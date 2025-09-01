@@ -145,11 +145,10 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function updateCredibilityScore(score) {
-      const adjustedScore = 100 - score;
       const credibilityValueElem = document.getElementById("credibility-score");
       if (credibilityValueElem) {
-        credibilityValueElem.textContent = `${adjustedScore}%`;
-        credibilityValueElem.style.color = adjustedScore < 50 ? "red" : "green";
+        credibilityValueElem.textContent = `${score}%`;
+        credibilityValueElem.style.color = score > 50 ? "red" : "green";
       }
     }
 
@@ -158,7 +157,7 @@ document.addEventListener("DOMContentLoaded", function() {
       resultStateDiv.classList.remove("hidden");
       const fakeScore = analysisResponse.fakeScore;
       const newsScore = analysisResponse.newsScore || 0;
-      const realScore = 100 - fakeScore;
+      const realScore = fakeScore;
       const urlInfoDiv = loadingStateDiv.querySelector(".url-info");
       if (urlInfoDiv) {
         const resultUrlInfo = urlInfoDiv.cloneNode(true);
@@ -245,9 +244,9 @@ document.addEventListener("DOMContentLoaded", function() {
         updateDonutChart(realProgress, realScore);
         realScoreElem.textContent = `${realScore}%`;
         document.getElementById("real-consistency").textContent = 
-          realScore > 75 ? "Very High" : "High";
+          realScore < 25 ? "Very High" : "High";
         document.getElementById("real-anomalies").textContent = 
-          realScore > 75 ? "Very Low" : "Low";
+          realScore < 25 ? "Very Low" : "Low";
         document.getElementById("real-detailed-view-link").href = analysisResponse.detailedViewUrl;
       }
     }

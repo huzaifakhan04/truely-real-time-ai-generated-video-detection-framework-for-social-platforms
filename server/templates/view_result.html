@@ -225,8 +225,17 @@
             .score-value.high {
                 color: var(--success-color);
             }
+
             .score-value.low {
                 color: var(--error-color);
+            }
+            
+            .score-circle.progress.success {
+                stroke: var(--success-color);
+            }
+
+            .score-circle.progress.error {
+                stroke: var(--error-color);
             }
 
             .score-label {
@@ -335,6 +344,16 @@
                 position: relative;
             }
             
+            .explanation.success {
+                background: var(--success-bg);
+                border-left: 4px solid var(--success-color);
+            }
+            
+            .explanation.warning {
+                background: var(--warning-bg);
+                border-left: 4px solid var(--warning-color);
+            }
+            
             .explanation::before {
                 content: "";
                 position: absolute;
@@ -344,6 +363,14 @@
                 height: 80px;
                 background: radial-gradient(circle, rgba(220, 38, 38, 0.05) 0%, rgba(220, 38, 38, 0) 70%);
                 z-index: 0;
+            }
+            
+            .explanation.success::before {
+                background: radial-gradient(circle, rgba(5, 150, 105, 0.05) 0%, rgba(5, 150, 105, 0) 70%);
+            }
+            
+            .explanation.warning::before {
+                background: radial-gradient(circle, rgba(217, 119, 6, 0.05) 0%, rgba(217, 119, 6, 0) 70%);
             }
 
             .explanation h3 {
@@ -355,12 +382,37 @@
                 align-items: center;
                 gap: 8px;
             }
+            
+            .explanation.success h3 {
+                color: var(--success-color);
+            }
+            
+            .explanation.warning h3 {
+                color: var(--warning-color);
+            }
 
             .explanation p {
                 color: var(--text-primary);
                 font-size: 0.9375rem;
                 margin: 0.75rem 0;
                 position: relative;
+            }
+            
+            .color-indicator {
+                display: inline-block;
+                margin-right: 5px;
+            }
+            
+            .color-success {
+                color: var(--success-color);
+            }
+            
+            .color-warning {
+                color: var(--warning-color);
+            }
+            
+            .color-error {
+                color: var(--error-color);
                 z-index: 1;
             }
 
@@ -815,17 +867,17 @@
                         <div class="score-ring">
                             <svg viewBox="0 0 100 100">
                                 <circle class="score-circle bg" cx="50" cy="50" r="42" />
-                                <circle class="score-circle progress" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="{{ 263.89 * (100 - fake_score) / 100 }}" />
+                                <circle class="score-circle progress {% if fake_score < 50 %}success{% else %}error{% endif %}" cx="50" cy="50" r="42" stroke-dasharray="263.89" stroke-dashoffset="{{ 263.89 * (100 - fake_score) / 100 }}" />
                             </svg>
                             <div class="score-text">
-                                <div class="score-value">{{ fake_score }}%</div>
+                                <div class="score-value {% if fake_score < 50 %}high{% else %}low{% endif %}">{{ fake_score }}%</div>
                                 <div class="score-label">AI-Generated</div>
                             </div>
                         </div>
                     </div>
                     <div class="grid">
                         <div class="stat-card">
-                            <div class="stat-icon error">
+                            <div class="stat-icon {% if fake_score < 50 %}success{% else %}error{% endif %}">
                                 <i class="fas fa-robot"></i>
                             </div>
                             <div class="stat-content">
@@ -834,7 +886,7 @@
                             </div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon {% if fake_score > 80 %}error{% elif fake_score > 50 %}warning{% else %}success{% endif %}">
+                            <div class="stat-icon {% if fake_score < 40 %}success{% elif fake_score < 60 %}warning{% else %}error{% endif %}">
                                 <i class="fas fa-face-meh"></i>
                             </div>
                             <div class="stat-content">
@@ -850,7 +902,7 @@
                             </div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-icon {% if fake_score > 80 %}error{% elif fake_score > 50 %}warning{% else %}success{% endif %}">
+                            <div class="stat-icon {% if fake_score < 40 %}success{% elif fake_score < 60 %}warning{% else %}error{% endif %}">
                                 <i class="fas fa-film"></i>
                             </div>
                             <div class="stat-content">
@@ -866,10 +918,16 @@
                             </div>
                         </div>
                     </div>
-                    <div class="explanation">
-                        <h3><i class="fas fa-exclamation-triangle"></i> AI Manipulation Alert</h3>
+                    <div class="explanation {% if fake_score < 40 %}success{% elif fake_score < 60 %}warning{% endif %}">
+                        <h3><i class="fas {% if fake_score < 40 %}fa-check-circle{% elif fake_score < 60 %}fa-exclamation-circle{% else %}fa-exclamation-triangle{% endif %}"></i> Video Analysis Alert</h3>
                         <p>
-                            This video shows signs of AI-generated edits based on facial and frame inconsistencies. 
+                            {% if fake_score < 40 %}
+                            This video shows minimal signs of manipulation based on facial and frame analysis.
+                            {% else %}
+                            This video shows signs of AI-generated edits based on facial and frame inconsistencies.
+                            {% endif %}
+                        </p>
+                        <p>
                             {% if fake_score > 80 %}
                             ⚠️ Very high AI detection – this content is likely manipulated.
                             {% elif fake_score > 60 %}
@@ -880,7 +938,7 @@
                             ✅ Low AI detection – video appears mostly authentic, but minor anomalies exist.
                             {% endif %}
                         </p>
-                        <p>Red bounding boxes highlight frames flagged for facial inconsistencies.</p>
+                        <p>Colored bounding boxes highlight frames flagged for facial inconsistencies based on detection severity.</p>
                     </div>
                     <div class="video-container">
                         <video controls>
@@ -1066,11 +1124,11 @@
                 <div class="card-body">
                     <div class="explanation">
                         <h3>Video Insights</h3>
-                        <p>Evaluates facial movements and frame consistency to spot AI manipulation. A higher AI-Generated score = more likely the video was altered.</p>
+                        <p>Evaluates facial movements and frame consistency to spot AI manipulation. A higher score means the video is more likely to have been altered.</p>
                     </div>
                     <div class="explanation">
                         <h3>Content Insights</h3>
-                        <p>Checks spoken content for accuracy, misinformation, or fabrication, regardless of AI edits.</p>
+                        <p>Checks spoken content for accuracy, misinformation, or fabrication, regardless of AI edits. A lower score means the audio and its content are more likely to have been altered.</p>
                     </div>
                     
                     <p><strong>Note:</strong> Use these insights to make informed judgments. Always verify with multiple trusted sources.</p>
