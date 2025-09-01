@@ -1013,7 +1013,7 @@
                             <div class="stat-content">
                                 <div class="stat-label">Fact-Check Verdict</div>
                                 <div class="stat-value content-verdict-text">
-                                    {{ verdict }}
+                                    {% if verdict == "fake" %}Fake{% elif verdict == "authentic" %}Authentic{% elif verdict == "misleading" %}Misleading{% else %}Uncertain{% endif %}
                                 </div>
                             </div>
                         </div>
