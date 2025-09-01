@@ -107,6 +107,15 @@ def cleanup_old_results():
 cleanup_thread = threading.Thread(target=cleanup_old_results, daemon=True)
 cleanup_thread.start()
 
+@app.get("/favicon.ico")
+async def get_favicon():
+    favicon_path = os.path.join(static_dir, "icon16.png")
+    if os.path.exists(favicon_path):
+        return FileResponse(favicon_path)
+    else:
+        logger.warning(f"Favicon file not found at {favicon_path}")
+        raise HTTPException(status_code=404, detail="Favicon not found")
+
 @app.get("/view/{result_id}", response_class=HTMLResponse)
 async def view_result(result_id: str, request: Request):
     if not result_id or result_id not in analysis_results:

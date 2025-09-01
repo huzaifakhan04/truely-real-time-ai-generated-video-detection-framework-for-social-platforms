@@ -19,6 +19,14 @@
   border: 1px solid var(--border-color-light);
 }
 
+.no-sources {
+  padding: 12px;
+  color: var(--text-tertiary);
+  font-style: italic;
+  text-align: center;
+  font-size: 13px;
+}
+
 .evidence-item {
   padding: 8px 12px;
   transition: background-color var(--transition-fast);

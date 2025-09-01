@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Truely",
-  "version": "2.2.8",
+  "version": "2.2.9",
   "description": "A real-time browser extension that detects AI-generated or manipulated videos on social platforms and cross-verifies audio content against trusted sources using agentic AI web search.",
   "icons": {
     "16": "icons/icon16.png",

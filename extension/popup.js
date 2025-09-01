@@ -168,7 +168,6 @@ document.addEventListener("DOMContentLoaded", function() {
       const newsSection = document.getElementById("news-analysis-section");
       if (newsSection) {
         if (analysisResponse.newsSummary && analysisResponse.newsSummary !== "No audio analysis available") {
-          newsSection.classList.remove("hidden");
           updateCredibilityScore(newsScore);
           const verdictElem = document.getElementById("content-verdict");
           if (verdictElem && analysisResponse.verdict) {
@@ -204,27 +203,104 @@ document.addEventListener("DOMContentLoaded", function() {
             summaryElem.textContent = analysisResponse.newsSummary;
           }
         } else {
-          newsSection.classList.add("hidden");
+          const summaryElem = document.getElementById("news-summary");
+          if (summaryElem) {
+            summaryElem.textContent = "No audio analysis available. The video may not have audio content, or the audio could not be transcribed.";
+          }
+          const credibilityElem = document.getElementById("credibility-score");
+          if (credibilityElem) {
+            credibilityElem.textContent = "N/A";
+          }
+          const verdictElem = document.getElementById("content-verdict");
+          if (verdictElem) {
+            verdictElem.textContent = "Not Available";
+          }
+          const confidenceElem = document.getElementById("verdict-confidence");
+          if (confidenceElem) {
+            confidenceElem.textContent = "N/A";
+          }
         }
       }
-      const evidenceContainer = document.getElementById("evidence-list");
-      if (evidenceContainer && analysisResponse.evidence && analysisResponse.evidence.length > 0) {
-        evidenceContainer.innerHTML = "";
-        analysisResponse.evidence.forEach(source => {
-          const sourceItem = document.createElement("div");
-          sourceItem.className = "evidence-item";
-          sourceItem.innerHTML = `
-            <a href="${source.url}" target="_blank" class="evidence-link">
-              <div class="evidence-title">${source.title}</div>
-              <div class="evidence-snippet">${source.snippet || 'Source confirming this'}</div>
-              <div class="evidence-url">${new URL(source.url).hostname}</div>
-            </a>
-          `;
-          evidenceContainer.appendChild(sourceItem);
-        });
-        document.getElementById("sources-section").classList.remove("hidden");
-      } else {
-        document.getElementById("sources-section").classList.add("hidden");
+      const handleEvidenceList = (containerId, sectionId) => {
+        const evidenceContainer = document.getElementById(containerId);
+        if (evidenceContainer && analysisResponse.evidence && analysisResponse.evidence.length > 0) {
+          evidenceContainer.innerHTML = "";
+          analysisResponse.evidence.forEach(source => {
+            const sourceItem = document.createElement("div");
+            sourceItem.className = "evidence-item";
+            sourceItem.innerHTML = `
+              <a href="${source.url}" target="_blank" class="evidence-link">
+                <div class="evidence-title">${source.title}</div>
+                <div class="evidence-snippet">${source.snippet || 'Source confirming this'}</div>
+                <div class="evidence-url">${new URL(source.url).hostname}</div>
+              </a>
+            `;
+            evidenceContainer.appendChild(sourceItem);
+          });
+        } else if (evidenceContainer) {
+          evidenceContainer.innerHTML = "<p class='no-sources'>No verified sources available for this content.</p>";
+        }
+      };
+      handleEvidenceList("evidence-list", "sources-section");
+      handleEvidenceList("real-evidence-list", "real-sources-section");
+      const realNewsSection = document.getElementById("real-news-analysis-section");
+      if (realNewsSection) {
+        if (analysisResponse.newsSummary && analysisResponse.newsSummary !== "No audio analysis available") {
+          const credibilityElem = document.getElementById("real-credibility-score");
+          if (credibilityElem) {
+            credibilityElem.textContent = `${newsScore}%`;
+          }
+          const verdictElem = document.getElementById("real-content-verdict");
+          if (verdictElem && analysisResponse.verdict) {
+            let verdictText = "Unknown";
+            let verdictClass = "";
+            switch(analysisResponse.verdict.toLowerCase()) {
+              case "authentic":
+                verdictText = "Authentic";
+                verdictClass = "low-credibility";
+                break;
+              case "misleading":
+                verdictText = "Misleading";
+                verdictClass = "medium-credibility";
+                break;
+              case "fake":
+                verdictText = "Fake";
+                verdictClass = "high-credibility";
+                break;
+              case "uncertain":
+                verdictText = "Uncertain";
+                verdictClass = "medium-credibility";
+                break;
+            }
+            verdictElem.textContent = verdictText;
+            verdictElem.className = `report-detail-value ${verdictClass}`;
+          }
+          const confidenceElem = document.getElementById("real-verdict-confidence");
+          if (confidenceElem) {
+            confidenceElem.textContent = `${analysisResponse.confidence || 0}%`;
+          }
+          const summaryElem = document.getElementById("real-news-summary");
+          if (summaryElem) {
+            summaryElem.textContent = analysisResponse.newsSummary;
+          }
+        } else {
+          const summaryElem = document.getElementById("real-news-summary");
+          if (summaryElem) {
+            summaryElem.textContent = "No audio analysis available. The video may not have audio content, or the audio could not be transcribed.";
+          }
+          const credibilityElem = document.getElementById("real-credibility-score");
+          if (credibilityElem) {
+            credibilityElem.textContent = "N/A";
+          }
+          const verdictElem = document.getElementById("real-content-verdict");
+          if (verdictElem) {
+            verdictElem.textContent = "Not Available";
+          }
+          const confidenceElem = document.getElementById("real-verdict-confidence");
+          if (confidenceElem) {
+            confidenceElem.textContent = "N/A";
+          }
+        }
       }
       if (fakeScore > 50) {
         realResultDiv.classList.add("hidden");
